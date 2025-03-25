@@ -22,8 +22,13 @@ import {
 
 import BackSpaceIcon from '../../assets/svg/backSpace.svg';
 import TableIcon from '../../assets/svg/table.svg';
+import Tooltip, {useTooltip} from '../../components/Toltip';
+import {useAuth} from '../../context/AuthContext';
+import api from '../../http/api';
 
 export function NumericKeyboard({navigation}: any) {
+  const {showTooltip, visible, hideTooltip, text} = useTooltip();
+  const {user, setMesaStorage, mesa} = useAuth();
   const [value, setValue] = useState('');
   const [isLandscape, setIsLandscape] = useState(false);
   const {width, height} = useWindowDimensions();
@@ -42,10 +47,20 @@ export function NumericKeyboard({navigation}: any) {
     setValue(prev => prev.slice(0, -1));
   };
 
-  const handleConfirm = () => {
-    if (value) {
-      console.log('Mesa selecionada:', value);
-      navigation.navigate('Products');
+  const handleConfirm = async () => {
+    try {
+      if (value) {
+        const resp = await api.get(
+          `/restaurantCnpj/${user?.restaurantCnpj}/mesa`,
+          {params: {mesaNumber: value}},
+        );
+        if (resp.status === 200) {
+          setMesaStorage(String(value));
+          navigation.navigate('Products');
+        }
+      }
+    } catch (error: any) {
+      showTooltip(error.response.data.message || 'Erro interno');
     }
   };
 
@@ -59,8 +74,14 @@ export function NumericKeyboard({navigation}: any) {
     </KeyboardRow>
   );
 
+  useEffect(() => {
+    console.log(mesa);
+    setValue(mesa);
+  }, []);
+
   return (
     <Container isLandscape={!isLandscape}>
+      {visible && <Tooltip text={text} onClose={hideTooltip} />}
       <ActionButtonsContainer isLandscape={!isLandscape}>
         <ContainerHeader>
           <Header>

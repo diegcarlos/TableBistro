@@ -6,6 +6,9 @@
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
     </style>
 
 </resources>

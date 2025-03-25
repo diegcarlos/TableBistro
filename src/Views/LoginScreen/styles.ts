@@ -3,7 +3,6 @@ import {fonts} from '../../theme/fonts';
 
 export const Container = styled.View`
   flex: 1;
-  height: 100%;
   background-color: #181818;
   justify-content: center;
   align-items: center;

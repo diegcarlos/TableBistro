@@ -11,6 +11,7 @@ import ContentProducts from '../../components/ContentProducts';
 import {GroupItens} from '../../components/GroupItems';
 import HeaderProducts from '../../components/HeaderProducts';
 import NavProducts from '../../components/NavProducts';
+import {useCart} from '../../context/CartContext';
 import {Container, ContentFluid} from './styles';
 
 interface Group {
@@ -124,6 +125,7 @@ const Groups: Group[] = [
 ];
 
 const Products = () => {
+  const {setIsCartOpen} = useCart();
   const scrollViewRef = useRef<ScrollView>(null);
   const groupLayouts = useRef<{[key: number]: LayoutRectangle}>({});
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
@@ -151,7 +153,6 @@ const Products = () => {
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const scrollY = event.nativeEvent.contentOffset.y;
 
-      // Encontra o grupo mais próximo do topo
       const visibleGroups = Groups.filter(g => g.products.length > 0);
       let closestGroup = 0;
       let minDistance = Number.MAX_VALUE;
@@ -202,6 +203,9 @@ const Products = () => {
                   <View style={{gap: 16}}>
                     {group.products.map(product => (
                       <CardProducts
+                        onPressAdd={() => {
+                          setIsCartOpen(true);
+                        }}
                         key={product.name}
                         image={product.image}
                         title={product.name}

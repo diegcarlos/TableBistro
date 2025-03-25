@@ -3,6 +3,8 @@ import styled from 'styled-components/native';
 
 const d = Dimensions.get('screen');
 export const Container = styled.View`
+  position: relative;
+  flex-direction: column;
   height: 60px;
   width: ${d.width - 220}px;
   background-color: #111111;
@@ -49,4 +51,32 @@ export const MenuItemText = styled.Text`
   flex-wrap: wrap;
   flex-shrink: 1;
   text-align: left;
+`;
+
+export const ViewMesa = styled.View`
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  left: 16px;
+  z-index: 1;
+  height: 60px;
+`;
+export const TextMesa = styled.Text`
+  color: #e6e6e6;
+  font-family: 'Montserrat-Medium';
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Montserrat-Medium';
+`;
+
+export const TextNumMesa = styled.View`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #545454;
+  width: 34px;
+  height: 32px;
+  border-radius: 5px;
 `;

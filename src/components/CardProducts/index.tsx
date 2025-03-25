@@ -19,6 +19,7 @@ interface CardProductsProps {
   price: number;
   priceDesconto?: number;
   discount: number;
+  onPressAdd?: () => void;
 }
 
 const CardProducts = ({
@@ -27,6 +28,7 @@ const CardProducts = ({
   description,
   price,
   discount = 0,
+  onPressAdd,
 }: CardProductsProps) => {
   const valueDiscount = discount > 0 ? price - (price * discount) / 100 : price;
   return (
@@ -52,7 +54,10 @@ const CardProducts = ({
               </PriceOriginal>
             )}
           </WrapperPrices>
-          <ButtonRed title="Adicionar ao carrinho" />
+          <ButtonRed
+            title="Adicionar ao carrinho"
+            onPress={() => onPressAdd?.()}
+          />
         </WrapperPrice>
       </Wrapper>
     </Container>

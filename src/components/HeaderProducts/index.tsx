@@ -10,6 +10,9 @@ import {
   MenuItemBody,
   MenuItemText,
   MenuTouchable,
+  TextMesa,
+  TextNumMesa,
+  ViewMesa,
 } from './styles';
 
 const itens = [
@@ -21,8 +24,10 @@ const itens = [
 
 import {useEffect, useRef} from 'react';
 import {Animated, Easing} from 'react-native';
+import {useAuth} from '../../context/AuthContext';
 
 function HeaderProducts() {
+  const {mesa} = useAuth();
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
 
@@ -76,6 +81,12 @@ function HeaderProducts() {
 
   return (
     <Container>
+      <ViewMesa>
+        <TextMesa>Mesa: </TextMesa>
+        <TextNumMesa>
+          <TextMesa>{mesa}</TextMesa>
+        </TextNumMesa>
+      </ViewMesa>
       <MenuHeader>
         {itens.map((item, i) => {
           const Icon = item.Icon;

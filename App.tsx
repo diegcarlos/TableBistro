@@ -1,5 +1,5 @@
 import React from 'react';
-import {KeyboardAvoidingView, Platform} from 'react-native';
+import {AppRegistry, KeyboardAvoidingView, Platform} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import Views from './src/Views';
 
@@ -14,5 +14,7 @@ function App(): React.JSX.Element {
     </GestureHandlerRootView>
   );
 }
+
+AppRegistry.registerComponent('TableBistro', () => App);
 
 export default App;
