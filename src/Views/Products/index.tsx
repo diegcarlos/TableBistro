@@ -1,3 +1,5 @@
+import {useQuery} from '@tanstack/react-query';
+import {AxiosResponse} from 'axios';
 import React, {useCallback, useRef, useState} from 'react';
 import {
   LayoutRectangle,
@@ -11,7 +13,9 @@ import ContentProducts from '../../components/ContentProducts';
 import {GroupItens} from '../../components/GroupItems';
 import HeaderProducts from '../../components/HeaderProducts';
 import NavProducts from '../../components/NavProducts';
+import {useAuth} from '../../context/AuthContext';
 import {useCart} from '../../context/CartContext';
+import api from '../../http/api';
 import {Container, ContentFluid} from './styles';
 
 interface Group {
@@ -26,6 +30,37 @@ interface Product {
   description?: string;
   price: number;
   discount: number;
+}
+
+export interface Category {
+  id: string;
+  nome: string;
+  imagem: string;
+  cor: string;
+  ordem: number;
+  temPromocao: boolean;
+  externoId: any;
+  restaurantCnpj: string;
+  delete: boolean;
+  createAt: string;
+  updateAt: any;
+  produtos: Produto[];
+  impressoras: any[];
+}
+
+export interface Produto {
+  id: string;
+  nome: string;
+  descricao: string;
+  imagem: string;
+  preco: number;
+  categoriaId: string;
+  externoId: any;
+  codigo: any;
+  restaurantCnpj: string;
+  delete: boolean;
+  createAt: string;
+  updateAt: any;
 }
 
 const Groups: Group[] = [
@@ -126,8 +161,9 @@ const Groups: Group[] = [
 
 const Products = () => {
   const {setIsCartOpen} = useCart();
+  const {user} = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
-  const groupLayouts = useRef<{[key: number]: LayoutRectangle}>({});
+  const groupLayouts = useRef<{[key: string]: LayoutRectangle}>({});
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
 
   const scrollToGroup = (index: number) => {
@@ -141,13 +177,20 @@ const Products = () => {
       });
     }
   };
+  const products = useQuery<AxiosResponse<Category[]>>({
+    queryKey: ['Products'],
+    queryFn: () =>
+      api.get(`/restaurantCnpj/${user?.restaurantCnpj}/categorias`),
+  });
 
   const onGroupLayout = useCallback(
-    (groupId: number, layout: LayoutRectangle) => {
+    (groupId: string, layout: LayoutRectangle) => {
       groupLayouts.current[groupId] = layout;
     },
     [],
   );
+
+  console.log(JSON.stringify(products.data?.data[0], null, 2));
 
   const onScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -180,6 +223,11 @@ const Products = () => {
       <NavProducts
         onSelectGroup={scrollToGroup}
         activeIndex={activeGroupIndex}
+        itens={
+          products.data?.data.map(pro => {
+            return {name: pro.nome};
+          }) || []
+        }
       />
       <ContentFluid>
         <HeaderProducts />
@@ -189,29 +237,29 @@ const Products = () => {
             onScroll={onScroll}
             scrollEventThrottle={16}
             style={{flex: 1}}>
-            {Groups.map(group => {
-              if (group.products.length === 0) {
+            {products.data?.data.map(group => {
+              if (group.produtos.length === 0) {
                 return null;
               }
               return (
                 <GroupItens
                   key={group.id}
-                  title={group.name}
+                  title={group.nome}
                   onLayout={event =>
                     onGroupLayout(group.id, event.nativeEvent.layout)
                   }>
                   <View style={{gap: 16}}>
-                    {group.products.map(product => (
+                    {group.produtos.map(product => (
                       <CardProducts
                         onPressAdd={() => {
                           setIsCartOpen(true);
                         }}
-                        key={product.name}
-                        image={product.image}
-                        title={product.name}
-                        description={product.description}
-                        price={product.price}
-                        discount={product.discount}
+                        key={product.nome}
+                        image={product.imagem}
+                        title={product.nome}
+                        description={product.descricao}
+                        price={product.preco}
+                        discount={0}
                       />
                     ))}
                   </View>

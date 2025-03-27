@@ -1,7 +1,10 @@
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import React from 'react';
 import {AppRegistry, KeyboardAvoidingView, Platform} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {name as appName} from './app.json';
 import Views from './src/Views';
+const queryClient = new QueryClient();
 
 function App(): React.JSX.Element {
   return (
@@ -9,12 +12,14 @@ function App(): React.JSX.Element {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{flex: 1}}>
-        <Views />
+        <QueryClientProvider client={queryClient}>
+          <Views />
+        </QueryClientProvider>
       </KeyboardAvoidingView>
     </GestureHandlerRootView>
   );
 }
 
-AppRegistry.registerComponent('TableBistro', () => App);
+AppRegistry.registerComponent(appName, () => App);
 
 export default App;

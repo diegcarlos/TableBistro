@@ -7,6 +7,7 @@ import {z} from 'zod';
 import EnterpriseIcon from '../../assets/svg/enterprise.svg';
 import PadLockIcon from '../../assets/svg/padLock.svg';
 import UserIcon from '../../assets/svg/user.svg';
+import {ButtonRed} from '../../components/ButtonRed';
 import CheckBox from '../../components/CheckBox';
 import TextInputWithIcon from '../../components/TextInput';
 import Tooltip, {useTooltip} from '../../components/Toltip';
@@ -17,9 +18,7 @@ import {
   ForgotPasswordContainer,
   ForgotPasswordText,
   FormContainer,
-  LoginButton,
   LoginButtonContainer,
-  LoginButtonText,
   Logo,
   LogoContainer,
   SavePasswordContainer,
@@ -46,6 +45,7 @@ export function LoginScreen({navigation}: {navigation: any}) {
 
   const {visible, text, showTooltip, hideTooltip} = useTooltip();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [loading, setLoading] = useState(false);
   const screenHeight = Dimensions.get('screen').height;
   const [savePassword, setSavePassword] = useState<boolean | null>(null);
 
@@ -119,6 +119,7 @@ export function LoginScreen({navigation}: {navigation: any}) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      setLoading(true);
       const resp = await signIn(data);
       if (resp.status === 201) {
         navigation.navigate('InsertTable');
@@ -127,7 +128,10 @@ export function LoginScreen({navigation}: {navigation: any}) {
         }
         reset();
       }
+      setLoading(false);
     } catch (error: any) {
+      setLoading(false);
+
       showTooltip(error.response.data.error || 'Erro interno');
     }
   };
@@ -142,7 +146,7 @@ export function LoginScreen({navigation}: {navigation: any}) {
       <Container
         style={{
           flex: 1,
-          marginBottom: keyboardHeight ? keyboardHeight : 0,
+          marginBottom: keyboardHeight || 0,
         }}>
         {visible && <Tooltip text={text} onClose={hideTooltip} />}
         <FormContainer>
@@ -214,15 +218,17 @@ export function LoginScreen({navigation}: {navigation: any}) {
           </SavePasswordContainer>
 
           <LoginButtonContainer>
-            <LoginButton
+            <ButtonRed
+              title="Login"
+              block
+              loading={loading}
               onPress={handleSubmit(onSubmit, errors => {
                 const firstError = Object.values(errors)[0];
                 if (firstError?.message) {
                   showTooltip(String(firstError.message));
                 }
-              })}>
-              <LoginButtonText>Login</LoginButtonText>
-            </LoginButton>
+              })}
+            />
           </LoginButtonContainer>
         </FormContainer>
       </Container>
