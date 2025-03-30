@@ -1,7 +1,7 @@
 import {Animated} from 'react-native';
 import styled from 'styled-components/native';
 
-export const Overlay = styled.Pressable`
+export const Overlay = styled(Animated.View)`
   position: absolute;
   top: 0;
   left: 0;
@@ -18,6 +18,7 @@ export const DrawerContainer = styled(Animated.View)<{placement: string}>`
   height: 100%;
   background-color: #2e2e2e;
   z-index: 2;
+  elevation: 10;
   ${({placement}: any) => {
     switch (placement) {
       case 'right':
@@ -77,5 +78,4 @@ export const CloseButton = styled.TouchableOpacity`
 export const Content = styled.View`
   flex: 1;
   background-color: #2e2e2e;
-  margin: 0 12px 12px 12px;
 `;

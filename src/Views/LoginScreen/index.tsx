@@ -219,7 +219,6 @@ export function LoginScreen({navigation}: {navigation: any}) {
 
           <LoginButtonContainer>
             <ButtonRed
-              title="Login"
               block
               loading={loading}
               onPress={handleSubmit(onSubmit, errors => {
@@ -227,8 +226,9 @@ export function LoginScreen({navigation}: {navigation: any}) {
                 if (firstError?.message) {
                   showTooltip(String(firstError.message));
                 }
-              })}
-            />
+              })}>
+              Login
+            </ButtonRed>
           </LoginButtonContainer>
         </FormContainer>
       </Container>

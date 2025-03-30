@@ -33,7 +33,7 @@ const CardProducts = ({
   const valueDiscount = discount > 0 ? price - (price * discount) / 100 : price;
   return (
     <Container>
-      <ImageProduct source={image} />
+      <ImageProduct source={{uri: image}} />
       <Wrapper>
         <TitleProduct>{title}</TitleProduct>
         <DescriptionProduct>{description}</DescriptionProduct>
@@ -54,10 +54,9 @@ const CardProducts = ({
               </PriceOriginal>
             )}
           </WrapperPrices>
-          <ButtonRed
-            title="Adicionar ao carrinho"
-            onPress={() => onPressAdd?.()}
-          />
+          <ButtonRed onPress={() => onPressAdd?.()}>
+            Adicionar ao carrinho
+          </ButtonRed>
         </WrapperPrice>
       </Wrapper>
     </Container>

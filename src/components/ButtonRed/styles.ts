@@ -1,7 +1,8 @@
 import styled from 'styled-components/native';
+import {TextBold, TextMedium, TextRegular} from '../Text';
 
 export const Container = styled.TouchableOpacity<{block?: boolean}>`
-  width: ${p => (p.block ? '100%' : '')};
+  width: ${(p: any) => (p.block ? '100%' : '')};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -10,8 +11,15 @@ export const Container = styled.TouchableOpacity<{block?: boolean}>`
   border-radius: 8px;
 `;
 
-export const TextButton = styled.Text`
+export const ButtonTextRegular = styled(TextRegular)`
   font-size: 18px;
-  font-family: 'Montserrat-Medium';
+  color: #f9f9f9;
+`;
+export const ButtonTextMedium = styled(TextMedium)`
+  font-size: 18px;
+  color: #f9f9f9;
+`;
+export const ButtonTextBold = styled(TextBold)`
+  font-size: 18px;
   color: #f9f9f9;
 `;

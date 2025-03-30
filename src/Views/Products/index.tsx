@@ -12,55 +12,28 @@ import CardProducts from '../../components/CardProducts';
 import ContentProducts from '../../components/ContentProducts';
 import {GroupItens} from '../../components/GroupItems';
 import HeaderProducts from '../../components/HeaderProducts';
+import {Modal} from '../../components/Modal';
+import {ModalCallWaiter} from '../../components/ModalCallWaiter';
 import NavProducts from '../../components/NavProducts';
+import {Product} from '../../components/Product';
 import {useAuth} from '../../context/AuthContext';
-import {useCart} from '../../context/CartContext';
+import {CartItems, useCart} from '../../context/CartContext';
 import api from '../../http/api';
+import {Category, Product as TypesProduct} from '../../types/products';
 import {Container, ContentFluid} from './styles';
 
 interface Group {
   id: number;
   name: string;
-  products: Product[];
+  products: FakeProduct[];
 }
 
-interface Product {
+interface FakeProduct {
   name: string;
   image: any;
   description?: string;
   price: number;
   discount: number;
-}
-
-export interface Category {
-  id: string;
-  nome: string;
-  imagem: string;
-  cor: string;
-  ordem: number;
-  temPromocao: boolean;
-  externoId: any;
-  restaurantCnpj: string;
-  delete: boolean;
-  createAt: string;
-  updateAt: any;
-  produtos: Produto[];
-  impressoras: any[];
-}
-
-export interface Produto {
-  id: string;
-  nome: string;
-  descricao: string;
-  imagem: string;
-  preco: number;
-  categoriaId: string;
-  externoId: any;
-  codigo: any;
-  restaurantCnpj: string;
-  delete: boolean;
-  createAt: string;
-  updateAt: any;
 }
 
 const Groups: Group[] = [
@@ -160,11 +133,15 @@ const Groups: Group[] = [
 ];
 
 const Products = () => {
-  const {setIsCartOpen} = useCart();
+  const {addToCart} = useCart();
   const {user} = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
   const groupLayouts = useRef<{[key: string]: LayoutRectangle}>({});
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
+  const [selectProduct, setSelectProduct] = useState({} as TypesProduct);
+  const [isModalProduct, setIsModalProduct] = useState(false);
+  const [indexProduct, setIndexProduct] = useState<number | null>(null);
+  const [isModalWaiter, setIsModalWaiter] = useState(false);
 
   const scrollToGroup = (index: number) => {
     const group = Groups[index];
@@ -190,7 +167,12 @@ const Products = () => {
     [],
   );
 
-  console.log(JSON.stringify(products.data?.data[0], null, 2));
+  const handleAddCard = (data: CartItems, index: number | null) => {
+    if (index) {
+      addToCart(data, index);
+    }
+    setIsModalProduct(false);
+  };
 
   const onScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -230,7 +212,7 @@ const Products = () => {
         }
       />
       <ContentFluid>
-        <HeaderProducts />
+        <HeaderProducts onPressWaiter={() => setIsModalWaiter(true)} />
         <ContentProducts>
           <ScrollView
             ref={scrollViewRef}
@@ -249,10 +231,12 @@ const Products = () => {
                     onGroupLayout(group.id, event.nativeEvent.layout)
                   }>
                   <View style={{gap: 16}}>
-                    {group.produtos.map(product => (
+                    {group.produtos.map((product, i) => (
                       <CardProducts
                         onPressAdd={() => {
-                          setIsCartOpen(true);
+                          setSelectProduct(product);
+                          setIndexProduct(i);
+                          setIsModalProduct(true);
                         }}
                         key={product.nome}
                         image={product.imagem}
@@ -269,6 +253,21 @@ const Products = () => {
           </ScrollView>
         </ContentProducts>
       </ContentFluid>
+
+      <Modal
+        overlayColor="#6B6B6BDE"
+        backgroundColor="#2E2E2E"
+        width={'90%'}
+        height={'90%'}
+        visible={isModalProduct}
+        onClose={() => setIsModalProduct(false)}>
+        <Product
+          product={selectProduct}
+          onProductFinish={p => handleAddCard(p, indexProduct)}
+          indexProduct={indexProduct}
+        />
+      </Modal>
+      <ModalCallWaiter isOpen={isModalWaiter} onClose={setIsModalWaiter} />
     </Container>
   );
 };

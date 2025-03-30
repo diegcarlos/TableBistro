@@ -1,23 +1,26 @@
 import React, {createContext, useContext, useState} from 'react';
-import {Text} from 'react-native';
-import {DrawerCarrinho} from '../components/Drawer';
+import {DrawerCar} from '../components/Drawer';
+import {FooterShop} from '../components/FooterShop';
+import {ShopItems} from '../components/ShopItems';
 
-interface CartItem {
+export interface CartItems {
   name: string;
   price: number;
   quantity: number;
   image?: any;
   description?: string;
+  total: number;
 }
 
 interface CartContextData {
-  cartItems: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (itemName: string) => void;
-  updateQuantity: (itemName: string, quantity: number) => void;
+  cartItems: CartItems[];
+  addToCart: (item: CartItems, index: number) => void;
+  removeFromCart: (index: number) => void;
+  updateQuantity: (index: number, quantity: number) => void;
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
+  clearCar?: () => void;
 }
 
 const CartContext = createContext<CartContextData>({} as CartContextData);
@@ -25,29 +28,48 @@ const CartContext = createContext<CartContextData>({} as CartContextData);
 export const CartProvider: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItems[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const addToCart = (item: CartItem) => {
+  const addToCart = (item: CartItems, index: number) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(i => i.name === item.name);
+      const existingItem = prevItems?.find((_, i) => i === index);
+      console.log(JSON.stringify(existingItem), index);
+
       if (existingItem) {
         return prevItems.map(i =>
-          i.name === item.name ? {...i, quantity: i.quantity + 1} : i,
+          i.name === item?.name
+            ? {
+                ...i,
+                quantity: i.quantity + 1,
+                total: item?.price * (i.quantity + 1),
+              }
+            : i,
         );
       }
-      return [...prevItems, {...item, quantity: 1}];
+      return [
+        ...prevItems,
+        {
+          ...item,
+          quantity: item?.quantity || 1,
+          total: item?.total,
+        },
+      ];
     });
   };
 
-  const removeFromCart = (itemName: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.name !== itemName));
+  const removeFromCart = (index: number) => {
+    setCartItems(prevItems => prevItems.filter((_, i) => i === index));
   };
 
-  const updateQuantity = (itemName: string, quantity: number) => {
+  const clearCar = () => {
+    setCartItems([]);
+  };
+
+  const updateQuantity = (index: number, quantity: number) => {
     setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.name === itemName ? {...item, quantity} : item,
+      prevItems.map((item, i) =>
+        i === index ? {...item, quantity, total: item.price * quantity} : item,
       ),
     );
   };
@@ -66,15 +88,24 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
         clearCart,
         isCartOpen,
         setIsCartOpen,
+        clearCar,
       }}>
-      <DrawerCarrinho
+      <DrawerCar
         placement="right"
         isOpen={isCartOpen}
         onClose={() => {
           setIsCartOpen(false);
         }}>
-        <Text>teste</Text>
-      </DrawerCarrinho>
+        <ShopItems
+          onUpdate={(e, i) => updateQuantity(i, e.quantity)}
+          products={cartItems}
+        />
+        <FooterShop
+          onFinish={() => setIsCartOpen(false)}
+          countItems={cartItems?.length}
+          subTotal={cartItems?.reduce((a, b) => a + b.total, 0)}
+        />
+      </DrawerCar>
       {children}
     </CartContext.Provider>
   );

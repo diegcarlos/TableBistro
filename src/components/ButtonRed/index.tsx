@@ -1,29 +1,57 @@
 import React from 'react';
-import {ActivityIndicator} from 'react-native';
-import {Container, TextButton} from './styles';
+import {ActivityIndicator, StyleProp, ViewStyle} from 'react-native';
+import {
+  ButtonTextBold,
+  ButtonTextMedium,
+  ButtonTextRegular,
+  Container,
+} from './styles';
 
 interface ButtonRedProps {
-  title: string;
-  onPress: () => void;
+  children: React.ReactNode;
+  onPress?: () => void;
   loading?: boolean;
   block?: boolean;
+  fontWeight?: 'regular' | 'bold' | 'medium';
+  style?: StyleProp<ViewStyle>;
 }
 
+export const ButtonText = (
+  fontWeight: 'regular' | 'bold' | 'medium',
+  children: React.ReactNode,
+) => {
+  switch (fontWeight) {
+    case 'regular':
+      return <ButtonTextRegular>{children}</ButtonTextRegular>;
+    case 'bold':
+      return <ButtonTextBold>{children}</ButtonTextBold>;
+
+    case 'medium':
+      return <ButtonTextMedium>{children}</ButtonTextMedium>;
+
+    default:
+      return <ButtonTextMedium>{children}</ButtonTextMedium>;
+  }
+};
+
 export function ButtonRed({
-  title,
+  children,
   onPress,
   loading = false,
   block = false,
+  fontWeight = 'medium',
+  style,
 }: ButtonRedProps) {
   return (
     <Container
+      style={style}
       block={block}
       onPress={loading ? undefined : onPress}
       disabled={loading}>
       {loading ? (
         <ActivityIndicator color="#FFFFFF" size="small" />
       ) : (
-        <TextButton>{title}</TextButton>
+        ButtonText(fontWeight, children)
       )}
     </Container>
   );

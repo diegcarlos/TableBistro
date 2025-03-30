@@ -25,9 +25,17 @@ const itens = [
 import {useEffect, useRef} from 'react';
 import {Animated, Easing} from 'react-native';
 import {useAuth} from '../../context/AuthContext';
+import {useCart} from '../../context/CartContext';
 
-function HeaderProducts() {
+interface Props {
+  onPressWaiter?: () => void;
+}
+
+function HeaderProducts(props: Props) {
+  const {onPressWaiter} = props;
   const {mesa} = useAuth();
+  const {cartItems, setIsCartOpen} = useCart();
+
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
 
@@ -93,13 +101,18 @@ function HeaderProducts() {
           const isLast = i === itens.length - 1;
           return (
             <MenuItem key={item.id} isLast={isLast}>
-              <MenuTouchable>
+              <MenuTouchable
+                onPress={() => {
+                  item.id === 4 && setIsCartOpen(true);
+                  item.id === 3 && onPressWaiter?.();
+                }}>
                 <MenuItemBody>
                   <Animated.View
                     style={[
-                      isLast && {
-                        transform: [{rotate: spin}, {scale: scaleAnimation}],
-                      },
+                      isLast &&
+                        cartItems.length > 0 && {
+                          transform: [{rotate: spin}, {scale: scaleAnimation}],
+                        },
                     ]}>
                     <Icon fill={!isLast ? '#C83A2E' : '#F9F9F9'} width={30} />
                   </Animated.View>

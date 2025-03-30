@@ -1,7 +1,7 @@
 import styled from 'styled-components/native';
 import {fonts} from '../theme/fonts';
 
-export const Text = styled.Text`
+export const TextRegular = styled.Text`
   font-family: ${fonts.regular};
 `;
 
