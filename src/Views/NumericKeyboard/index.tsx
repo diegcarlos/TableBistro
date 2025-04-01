@@ -75,7 +75,6 @@ export function NumericKeyboard({navigation}: any) {
   );
 
   useEffect(() => {
-    console.log(mesa);
     setValue(mesa);
   }, []);
 

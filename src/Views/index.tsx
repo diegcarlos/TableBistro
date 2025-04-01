@@ -14,6 +14,7 @@ import {RestScreen} from './RestScreen';
 const Stack = createNativeStackNavigator();
 
 function RootStack() {
+  console.log(process.env.URL_API);
   return (
     <AuthProvider>
       <Stack.Navigator

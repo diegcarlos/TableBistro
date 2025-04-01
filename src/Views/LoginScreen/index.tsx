@@ -41,7 +41,7 @@ const formatCNPJ = (value: string) => {
 };
 
 export function LoginScreen({navigation}: {navigation: any}) {
-  const {signIn} = useAuth();
+  const {signIn, user} = useAuth();
 
   const {visible, text, showTooltip, hideTooltip} = useTooltip();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -119,17 +119,20 @@ export function LoginScreen({navigation}: {navigation: any}) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log(JSON.stringify(data, null, 2));
       setLoading(true);
       const resp = await signIn(data);
       if (resp.status === 201) {
-        navigation.navigate('InsertTable');
         if (savePassword === true) {
           handleSavePassword(data);
         }
+        navigation.replace('Home');
         reset();
       }
       setLoading(false);
     } catch (error: any) {
+      console.log(JSON.stringify(error.response.data, null, 2));
+
       setLoading(false);
 
       showTooltip(error.response.data.error || 'Erro interno');

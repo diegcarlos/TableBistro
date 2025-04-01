@@ -36,17 +36,17 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
       const existingItem = prevItems?.find((_, i) => i === index);
       console.log(JSON.stringify(existingItem), index);
 
-      if (existingItem) {
-        return prevItems.map(i =>
-          i.name === item?.name
-            ? {
-                ...i,
-                quantity: i.quantity + 1,
-                total: item?.price * (i.quantity + 1),
-              }
-            : i,
-        );
-      }
+      // if (existingItem) {
+      //   return prevItems.map(prev =>
+      //     prev.name === item?.name
+      //       ? {
+      //           ...prev,
+      //           quantity: prev.quantity + 1,
+      //           total: item?.price * (prev.quantity + 1),
+      //         }
+      //       : prev,
+      //   );
+      // }
       return [
         ...prevItems,
         {

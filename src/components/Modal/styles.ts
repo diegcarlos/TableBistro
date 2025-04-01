@@ -58,7 +58,6 @@ export const ModalContent = styled.View<ModalContentProps>`
 export const ModalCloseButton = styled.TouchableOpacity`
   width: 50px;
   height: 50px;
-  /* background-color: #c83a2e; */
   justify-content: center;
   align-items: center;
   position: absolute;

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {ImageSourcePropType} from 'react-native';
 import Swiper from 'react-native-swiper';
 import Logo from '../../assets/logoKukan.png';
 import BottomScreen from '../../assets/screenBottom.png';
 import TopScreen from '../../assets/screenTop.png';
 
+import {useAuth} from '../../context/AuthContext';
 import {
   ButtonContainer,
   ButtonText,
@@ -25,6 +26,23 @@ const images: ImageSourcePropType[] = [
 ];
 
 export function RestScreen({navigation}: {navigation: any}) {
+  const {user, mesa} = useAuth();
+  const handelPressNext = () => {
+    if (user && mesa) {
+      navigation.navigate('Products');
+    } else {
+      if (user) {
+        navigation.navigate('InsertTable');
+      } else {
+        navigation.navigate('Login');
+      }
+    }
+  };
+
+  useEffect(() => {
+    handelPressNext();
+  }, []);
+
   return (
     <Container>
       <ScreenTopContainer>
@@ -40,7 +58,7 @@ export function RestScreen({navigation}: {navigation: any}) {
 
       <ScreenBottomContainer>
         <ScreenBottom source={BottomScreen} />
-        <ButtonContainer onPress={() => navigation.navigate('Login')}>
+        <ButtonContainer onPress={handelPressNext}>
           <ButtonText>Toque para continuar</ButtonText>
         </ButtonContainer>
       </ScreenBottomContainer>
