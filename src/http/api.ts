@@ -1,7 +1,6 @@
 import axios from 'axios';
 const api = axios.create({
-  baseURL: 'https://api.bistro.app.br/',
-  timeout: 10000,
+  baseURL: 'http://192.168.3.3:4444/',
   headers: {
     'Content-Type': 'application/json',
   },

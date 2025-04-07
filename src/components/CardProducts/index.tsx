@@ -33,7 +33,7 @@ const CardProducts = ({
   const valueDiscount = discount > 0 ? price - (price * discount) / 100 : price;
   return (
     <Container>
-      <ImageProduct source={{uri: image}} />
+      <ImageProduct resizeMode="cover" source={{uri: image || '#'}} />
       <Wrapper>
         <TitleProduct>{title}</TitleProduct>
         <DescriptionProduct>{description}</DescriptionProduct>

@@ -45,9 +45,9 @@ export function Complements(props: Props) {
   return (
     <Container>
       <Title>{title}</Title>
-      {complements?.map((item, index) => {
+      {complements?.map(item => {
         return (
-          <ComplementContent key={index}>
+          <ComplementContent key={item.name}>
             <BoxCount>
               <TouchableOpacity>
                 <Minus />

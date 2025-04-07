@@ -11,7 +11,14 @@ export interface Category {
   createAt: string;
   updateAt: any;
   produtos: Product[];
-  impressoras: any[];
+  Impressora: PrintTypes;
+}
+
+export interface PrintTypes {
+  id?: string;
+  nome: string;
+  ip: string;
+  port: number;
 }
 
 export interface Product {

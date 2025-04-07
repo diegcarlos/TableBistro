@@ -9,11 +9,12 @@ import React, {
 } from 'react';
 import api from '../http/api';
 
-interface PropsUser {
+export interface PropsUser {
   id: string;
   username: string;
   role: 'SYSADMIN' | 'OWNER' | 'MANAGER' | 'USER';
   restaurantCnpj: string;
+  nome: string;
 }
 
 export interface PropsLoginResponse {

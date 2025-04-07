@@ -4,17 +4,19 @@ import BackIcon from '../../assets/svg/back.svg';
 import * as S from './styles';
 
 export interface DrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   placement?: 'left' | 'right' | 'top' | 'bottom';
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  title?: string;
 }
 
-export const DrawerCar: React.FC<DrawerProps> = ({
+export const Drawer: React.FC<DrawerProps> = ({
   isOpen,
   onClose,
   placement = 'right',
   children,
+  title,
 }) => {
   const translateValue = useRef(new Animated.Value(0)).current;
   const opacityValue = useRef(new Animated.Value(0)).current;
@@ -23,7 +25,7 @@ export const DrawerCar: React.FC<DrawerProps> = ({
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      
+
       // Animação para abrir o drawer com efeito de spring para movimento mais natural
       Animated.parallel([
         Animated.spring(translateValue, {
@@ -120,11 +122,9 @@ export const DrawerCar: React.FC<DrawerProps> = ({
           <S.CloseButton onPress={onClose}>
             <BackIcon width={24} height={24} color="#fff" />
           </S.CloseButton>
-          <S.Title>Seu Carrinho</S.Title>
+          <S.Title>{title}</S.Title>
         </S.Header>
-        <S.Content>
-          {children}
-        </S.Content>
+        <S.Content>{children}</S.Content>
       </S.DrawerContainer>
     </>
   );

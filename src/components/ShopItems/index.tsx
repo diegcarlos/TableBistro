@@ -32,7 +32,7 @@ export function ShopItems(props: Props) {
           contentContainerStyle={{marginBottom: 16}}
           overScrollMode="never">
           {products.map((product, index) => (
-            <ContainerItem key={index}>
+            <ContainerItem key={product.name}>
               <ImageProduct src={product?.image} />
               <ContainerContent>
                 <TitleProduct>{product?.name}</TitleProduct>

@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query';
 import {AxiosResponse} from 'axios';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   LayoutRectangle,
   NativeScrollEvent,
@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import CardProducts from '../../components/CardProducts';
 import ContentProducts from '../../components/ContentProducts';
+import {DrawerCarShop} from '../../components/DrawerCarShop';
+import {DrawerWallet} from '../../components/DrawerWallet';
 import {GroupItens} from '../../components/GroupItems';
 import HeaderProducts from '../../components/HeaderProducts';
 import {Modal} from '../../components/Modal';
@@ -23,7 +25,7 @@ import {Category, Product as TypesProduct} from '../../types/products';
 import {Container, ContentFluid} from './styles';
 
 const Products = () => {
-  const {addToCart} = useCart();
+  const {addToCart, setDataProducts} = useCart();
   const {user} = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
   const groupLayouts = useRef<{[key: string]: LayoutRectangle}>({});
@@ -32,6 +34,8 @@ const Products = () => {
   const [isModalProduct, setIsModalProduct] = useState(false);
   const [indexProduct, setIndexProduct] = useState<number | null>(null);
   const [isModalWaiter, setIsModalWaiter] = useState(false);
+  const [isDrawerWallet, setIsDrawerWallet] = useState(false);
+  const [isDrawerShopCar, setIsDrawerShopCar] = useState(false);
 
   const products = useQuery<AxiosResponse<Category[]>>({
     queryKey: ['Products'],
@@ -47,7 +51,6 @@ const Products = () => {
   );
 
   const scrollToGroup = (index: number) => {
-    console.log(index);
     const group = products.data?.data[index];
     if (group && scrollViewRef.current && groupLayouts.current[group.id]) {
       const layout = groupLayouts.current[group.id];
@@ -60,8 +63,8 @@ const Products = () => {
   };
 
   const handleAddCard = (data: CartItems, index: number | null) => {
-    if (index) {
-      addToCart(data, index);
+    if (index !== null) {
+      addToCart(data);
     }
     setIsModalProduct(false);
   };
@@ -101,6 +104,11 @@ const Products = () => {
     [products.data?.data],
   );
 
+  useEffect(() => {
+    groupLayouts.current = {};
+    setDataProducts(products.data?.data || []);
+  }, [products.data]);
+
   return (
     <Container>
       <NavProducts
@@ -113,17 +121,18 @@ const Products = () => {
         }
       />
       <ContentFluid>
-        <HeaderProducts onPressWaiter={() => setIsModalWaiter(true)} />
+        <HeaderProducts
+          onPressWaiter={() => setIsModalWaiter(true)}
+          onPressWallet={() => setIsDrawerWallet(true)}
+          onPressShopCar={() => setIsDrawerShopCar(true)}
+        />
         <ContentProducts>
           <ScrollView
             ref={scrollViewRef}
             onScroll={onScroll}
             scrollEventThrottle={16}
             style={{flex: 1}}>
-            {products.data?.data.map(group => {
-              if (group.produtos.length === 0) {
-                return null;
-              }
+            {products.data?.data.map((group, index) => {
               return (
                 <GroupItens
                   key={group.id}
@@ -139,7 +148,7 @@ const Products = () => {
                           setIndexProduct(i);
                           setIsModalProduct(true);
                         }}
-                        key={product.nome}
+                        key={product.id}
                         image={product.imagem}
                         title={product.nome}
                         description={product.descricao}
@@ -168,6 +177,8 @@ const Products = () => {
           indexProduct={indexProduct}
         />
       </Modal>
+      <DrawerWallet isOpen={isDrawerWallet} onClose={setIsDrawerWallet} />
+      <DrawerCarShop isOpen={isDrawerShopCar} onClose={setIsDrawerShopCar} />
       <ModalCallWaiter isOpen={isModalWaiter} onClose={setIsModalWaiter} />
     </Container>
   );

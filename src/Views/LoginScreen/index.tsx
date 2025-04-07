@@ -1,5 +1,6 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {AxiosError} from 'axios';
 import React, {useEffect, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 import {Dimensions, Keyboard, ScrollView} from 'react-native';
@@ -119,7 +120,6 @@ export function LoginScreen({navigation}: {navigation: any}) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      console.log(JSON.stringify(data, null, 2));
       setLoading(true);
       const resp = await signIn(data);
       if (resp.status === 201) {
@@ -131,11 +131,16 @@ export function LoginScreen({navigation}: {navigation: any}) {
       }
       setLoading(false);
     } catch (error: any) {
-      console.log(JSON.stringify(error.response.data, null, 2));
+      if (error instanceof AxiosError) {
+        const err: AxiosError = error;
+        console.log(err.toJSON());
+      }
 
       setLoading(false);
 
       showTooltip(error.response.data.error || 'Erro interno');
+    } finally {
+      setLoading(false);
     }
   };
 

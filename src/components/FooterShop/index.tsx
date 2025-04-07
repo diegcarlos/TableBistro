@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function FooterShop(props: Props) {
-  const {clearCar} = useCart();
+  const {clearCart} = useCart();
   const {countItems = 0, subTotal = 0, onFinish} = props;
   return (
     <Container>
@@ -44,7 +44,7 @@ export function FooterShop(props: Props) {
         </CancelButton>
         <ButtonRed
           onPress={() => {
-            clearCar?.();
+            clearCart?.();
             onFinish?.();
           }}
           style={{width: '50%'}}

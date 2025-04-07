@@ -87,17 +87,18 @@ export function Product(props: Props) {
       setStepSelect(index);
       setDataSteps(newDataSteps);
     }
-    if (index > dataSteps.length - 1 && indexProduct) {
+    if (index > dataSteps.length - 1) {
       onProductFinish?.(
         {
           name: product.nome,
           image: product.imagem,
           description: product.descricao,
+          categoriaId: product.categoriaId,
           price: product.preco,
           quantity: qtd,
           total: product.preco * qtd,
         },
-        indexProduct,
+        indexProduct as number,
       );
     }
   };
@@ -128,7 +129,7 @@ export function Product(props: Props) {
               {dataSteps.map((dataStep, index) => (
                 <StepsOptions
                   onPress={() => handlePressSteps(index)}
-                  key={index}
+                  key={dataStep.type}
                   active={stepSelect === index}>
                   <StepsOptionsContent>
                     {dataStep.active ? (
@@ -164,7 +165,7 @@ export function Product(props: Props) {
               } else if (st.type === 'comp' && stepSelect === index) {
                 return (
                   <Complements
-                    key={index}
+                    key={st.type}
                     title={dataComplement.title}
                     complements={dataComplement.data}
                   />
@@ -172,7 +173,7 @@ export function Product(props: Props) {
               } else if (st.type === 'qtd' && stepSelect === index) {
                 return (
                   <AddRemove
-                    key={index}
+                    key={st.type}
                     value={qtd}
                     onChange={setQtd}
                     minValue={1}

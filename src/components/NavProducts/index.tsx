@@ -38,7 +38,7 @@ function NavProducts({
             <NavItem
               onPress={() => onSelectGroup(index)}
               isActive={activeIndex === index}
-              key={index}>
+              key={item.name}>
               {Icon && <Icon width={24} height={24} />}
               <NavItemText>{item.name}</NavItemText>
             </NavItem>

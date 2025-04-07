@@ -9,9 +9,12 @@ export const Container = styled.View`
   flex-direction: row;
 `;
 
-export const ImageProduct = styled.Image`
+export const ImageProduct = styled.ImageBackground`
   width: 264px;
   height: 100%;
+  background-color: #2e2e2e;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const TitleProduct = styled.Text`

@@ -52,7 +52,7 @@ export function RestScreen({navigation}: {navigation: any}) {
 
       <Swiper autoplay autoplayTimeout={5} showsPagination={false}>
         {images.map((image, index) => (
-          <StyledImage key={index} source={image} resizeMode="cover" />
+          <StyledImage key={image} source={image} resizeMode="cover" />
         ))}
       </Swiper>
 

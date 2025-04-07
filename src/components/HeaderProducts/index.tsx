@@ -29,12 +29,14 @@ import {useCart} from '../../context/CartContext';
 
 interface Props {
   onPressWaiter?: () => void;
+  onPressWallet?: () => void;
+  onPressShopCar?: () => void;
 }
 
 function HeaderProducts(props: Props) {
-  const {onPressWaiter} = props;
+  const {onPressWaiter, onPressWallet, onPressShopCar} = props;
   const {mesa} = useAuth();
-  const {cartItems, setIsCartOpen} = useCart();
+  const {cartItems} = useCart();
 
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
@@ -103,8 +105,9 @@ function HeaderProducts(props: Props) {
             <MenuItem key={item.id} isLast={isLast}>
               <MenuTouchable
                 onPress={() => {
-                  item.id === 4 && setIsCartOpen(true);
+                  item.id === 4 && onPressShopCar?.();
                   item.id === 3 && onPressWaiter?.();
+                  item.id === 2 && onPressWallet?.();
                 }}>
                 <MenuItemBody>
                   <Animated.View

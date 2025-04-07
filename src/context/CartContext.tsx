@@ -1,26 +1,32 @@
+import _ from 'lodash';
 import React, {createContext, useContext, useState} from 'react';
-import {DrawerCar} from '../components/Drawer';
-import {FooterShop} from '../components/FooterShop';
-import {ShopItems} from '../components/ShopItems';
+import {usePrinter} from '../hooks/usePrinter';
+import {Category} from '../types/products';
 
 export interface CartItems {
   name: string;
   price: number;
   quantity: number;
   image?: any;
+  categoriaId?: string;
   description?: string;
+  print?: {host: string; port: number};
   total: number;
 }
 
 interface CartContextData {
   cartItems: CartItems[];
-  addToCart: (item: CartItems, index: number) => void;
+  addToCart: (item: CartItems) => void;
+  dataWallet: CartItems[];
+  setDataWallet: (data: CartItems[]) => void;
+  dataProducts: Category[];
+  setDataProducts: (data: Category[]) => void;
   removeFromCart: (index: number) => void;
   updateQuantity: (index: number, quantity: number) => void;
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
-  clearCar?: () => void;
+  onFinish: () => void;
 }
 
 const CartContext = createContext<CartContextData>({} as CartContextData);
@@ -29,41 +35,32 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {
   const [cartItems, setCartItems] = useState<CartItems[]>([]);
+  const [dataWallet, setDataWallet] = useState<CartItems[]>([]);
+  const [dataProducts, setDataProducts] = useState<Category[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const addToCart = (item: CartItems, index: number) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems?.find((_, i) => i === index);
-      console.log(JSON.stringify(existingItem), index);
+  const {printBill} = usePrinter();
 
-      // if (existingItem) {
-      //   return prevItems.map(prev =>
-      //     prev.name === item?.name
-      //       ? {
-      //           ...prev,
-      //           quantity: prev.quantity + 1,
-      //           total: item?.price * (prev.quantity + 1),
-      //         }
-      //       : prev,
-      //   );
-      // }
-      return [
-        ...prevItems,
-        {
-          ...item,
-          quantity: item?.quantity || 1,
-          total: item?.total,
-        },
-      ];
+  const addToCart = (item: CartItems) => {
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(prev => prev.name === item.name);
+      if (existingItem) {
+        return prevItems.map(prev =>
+          prev.name === item.name
+            ? {
+                ...prev,
+                quantity: prev.quantity + 1,
+                total: item.price * (prev.quantity + 1),
+              }
+            : prev,
+        );
+      }
+      return [...prevItems, {...item, quantity: 1, total: item.price}];
     });
   };
 
   const removeFromCart = (index: number) => {
-    setCartItems(prevItems => prevItems.filter((_, i) => i === index));
-  };
-
-  const clearCar = () => {
-    setCartItems([]);
+    setCartItems(prevItems => prevItems.filter((_, i) => i !== index));
   };
 
   const updateQuantity = (index: number, quantity: number) => {
@@ -78,34 +75,61 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
     setCartItems([]);
   };
 
+  const onFinish = () => {
+    if (cartItems.length > 0 && dataProducts.length > 0) {
+      setDataWallet(cartItems);
+      const print = cartItems.map(item => {
+        const category = dataProducts.find(category => {
+          return category.id === item.categoriaId;
+        });
+
+        return {
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          Impressora: category?.Impressora,
+        };
+      });
+
+      const groupPrints = _.groupBy(print, item => item.Impressora?.id);
+
+      Object.entries(groupPrints).forEach(([key, value]) => {
+        const printer = value[0].Impressora;
+
+        const items = value.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+
+        const total = cartItems.reduce((a, b) => a + b.total, 0);
+
+        if (printer) {
+          printBill(items, total, {
+            printer: {host: printer.ip, port: printer.port, name: printer.nome},
+          });
+        }
+      });
+      setIsCartOpen(false);
+    }
+  };
+
   return (
     <CartContext.Provider
       value={{
+        dataProducts,
+        setDataProducts,
         cartItems,
         addToCart,
         removeFromCart,
+        dataWallet,
+        setDataWallet,
         updateQuantity,
         clearCart,
         isCartOpen,
         setIsCartOpen,
-        clearCar,
+        onFinish,
       }}>
-      <DrawerCar
-        placement="right"
-        isOpen={isCartOpen}
-        onClose={() => {
-          setIsCartOpen(false);
-        }}>
-        <ShopItems
-          onUpdate={(e, i) => updateQuantity(i, e.quantity)}
-          products={cartItems}
-        />
-        <FooterShop
-          onFinish={() => setIsCartOpen(false)}
-          countItems={cartItems?.length}
-          subTotal={cartItems?.reduce((a, b) => a + b.total, 0)}
-        />
-      </DrawerCar>
       {children}
     </CartContext.Provider>
   );

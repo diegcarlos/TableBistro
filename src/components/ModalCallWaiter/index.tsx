@@ -1,4 +1,6 @@
 import CallWaiter from '../../assets/svg/call-waiter.svg';
+import {useAuth} from '../../context/AuthContext';
+import {usePrinter} from '../../hooks/usePrinter';
 import {
   CancelButton,
   CancelButtonText,
@@ -18,7 +20,22 @@ interface Props {
 }
 
 export function ModalCallWaiter(props: Props) {
+  const {mesa} = useAuth();
   const {isOpen = false, onClose} = props;
+  const {printText} = usePrinter();
+
+  const handlePressTalkWaiter = async () => {
+    try {
+      onClose?.(false);
+      const text = `<CB>CHAMANDO GARCOM DA MESA ${mesa}</CB>`;
+      await printText(text, {
+        host: '192.168.3.220',
+        port: 9100,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <Modal
       closeButton={false}
@@ -40,7 +57,7 @@ export function ModalCallWaiter(props: Props) {
             <CancelButtonText>Voltar</CancelButtonText>
           </CancelButton>
           <ButtonRed
-            onPress={() => onClose?.(false)}
+            onPress={handlePressTalkWaiter}
             fontWeight="bold"
             style={{width: '50%'}}>
             Sim, chamar

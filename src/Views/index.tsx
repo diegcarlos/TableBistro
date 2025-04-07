@@ -14,19 +14,20 @@ import {RestScreen} from './RestScreen';
 const Stack = createNativeStackNavigator();
 
 function RootStack() {
-  console.log(process.env.URL_API);
   return (
     <AuthProvider>
-      <Stack.Navigator
-        initialRouteName="Home"
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="Home" component={RestScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="InsertTable" component={NumericKeyboard} />
-        <Stack.Screen name="Products" component={Products} />
-      </Stack.Navigator>
+      <CartProvider>
+        <Stack.Navigator
+          initialRouteName="Home"
+          screenOptions={{
+            headerShown: false,
+          }}>
+          <Stack.Screen name="Home" component={RestScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="InsertTable" component={NumericKeyboard} />
+          <Stack.Screen name="Products" component={Products} />
+        </Stack.Navigator>
+      </CartProvider>
     </AuthProvider>
   );
 }
@@ -34,28 +35,25 @@ function RootStack() {
 export default function App() {
   useEffect(() => {
     kioskmode.checkPermissions();
-
     kioskmode.startKioskMode();
     SystemNavigationBar.navigationHide();
     SystemNavigationBar.setNavigationColor('transparent', 'dark');
   }, []);
 
   return (
-    <CartProvider>
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -100}>
-        <View
-          style={{
-            flex: 1,
-          }}>
-          <NavigationContainer>
-            <StatusBar hidden={true} translucent={true} />
-            <RootStack />
-          </NavigationContainer>
-        </View>
-      </KeyboardAvoidingView>
-    </CartProvider>
+    <KeyboardAvoidingView
+      style={{flex: 1}}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -100}>
+      <View
+        style={{
+          flex: 1,
+        }}>
+        <NavigationContainer>
+          <StatusBar hidden={true} translucent={true} />
+          <RootStack />
+        </NavigationContainer>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
