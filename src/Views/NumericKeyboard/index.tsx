@@ -33,10 +33,6 @@ export function NumericKeyboard({navigation}: any) {
   const [isLandscape, setIsLandscape] = useState(false);
   const {width, height} = useWindowDimensions();
 
-  useEffect(() => {
-    setIsLandscape(width > height);
-  }, [width, height]);
-
   const handleNumberPress = (number: string) => {
     if (value.length < 4) {
       setValue(prev => prev + number);
@@ -49,18 +45,30 @@ export function NumericKeyboard({navigation}: any) {
 
   const handleConfirm = async () => {
     try {
-      if (value) {
-        const resp = await api.get(
-          `/restaurantCnpj/${user?.restaurantCnpj}/mesa`,
-          {params: {mesaNumber: value}},
-        );
-        if (resp.status === 200) {
-          setMesaStorage(String(value));
-          navigation.navigate('Products');
-        }
+      if (!value) {
+        showTooltip('Por favor, insira o número da mesa');
+        return;
+      }
+
+      if (!user || !user.restaurantCnpj) {
+        showTooltip('Informações do usuário não disponíveis');
+        return;
+      }
+
+      const resp = await api.get(
+        `/restaurantCnpj/${user.restaurantCnpj}/mesa`,
+        {params: {mesaNumber: value}},
+      );
+
+      if (resp.status === 200) {
+        setMesaStorage(String(value), resp.data.id);
+        navigation.navigate('Products');
       }
     } catch (error: any) {
-      showTooltip(error.response.data.message || 'Erro interno');
+      console.error('Erro ao confirmar mesa:', error);
+      const errorMessage =
+        error.response?.data?.message || 'Erro ao conectar com o servidor';
+      showTooltip(errorMessage);
     }
   };
 
@@ -75,8 +83,14 @@ export function NumericKeyboard({navigation}: any) {
   );
 
   useEffect(() => {
-    setValue(mesa);
-  }, []);
+    setIsLandscape(width > height);
+  }, [width, height]);
+
+  useEffect(() => {
+    if (mesa && mesa.mesa) {
+      setValue(String(mesa.mesa));
+    }
+  }, [mesa]);
 
   return (
     <Container isLandscape={!isLandscape}>
@@ -108,7 +122,7 @@ export function NumericKeyboard({navigation}: any) {
         {renderKeyboardRow(['1', '2', '3'])}
         <KeyboardRow>
           <KeyButton>
-            <KeyText />
+            <KeyText>{null}</KeyText>
           </KeyButton>
           <KeyButton onPress={() => handleNumberPress('0')}>
             <KeyText>0</KeyText>

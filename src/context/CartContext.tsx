@@ -2,8 +2,10 @@ import _ from 'lodash';
 import React, {createContext, useContext, useState} from 'react';
 import {usePrinter} from '../hooks/usePrinter';
 import {Category} from '../types/products';
+import {useAuth} from './AuthContext';
 
 export interface CartItems {
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -34,6 +36,7 @@ const CartContext = createContext<CartContextData>({} as CartContextData);
 export const CartProvider: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {
+  const {mesa} = useAuth();
   const [cartItems, setCartItems] = useState<CartItems[]>([]);
   const [dataWallet, setDataWallet] = useState<CartItems[]>([]);
   const [dataProducts, setDataProducts] = useState<Category[]>([]);
@@ -75,8 +78,20 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
     setCartItems([]);
   };
 
-  const onFinish = () => {
+  const onFinish = async () => {
     if (cartItems.length > 0 && dataProducts.length > 0) {
+      // const resp = await api.post('/pedidos', {
+      //   mesa: mesa.idMesa,
+      //   status: 'ABERTO',
+      //   produtos: cartItems.map(item => {
+      //     return {
+      //       produtoId: item.id,
+      //       status: 'PREPARANDO',
+      //       quantidade: item.quantity,
+      //     };
+      //   }),
+      // });
+
       setDataWallet(cartItems);
       const print = cartItems.map(item => {
         const category = dataProducts.find(category => {

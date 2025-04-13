@@ -121,18 +121,18 @@ export const usePrinter = (): PrinterHook => {
       }
 
       // Constrói o texto para impressão na cozinha
-      receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR_58MM}</C>\n\n`;
-      receiptText += `<CB>MESA ${mesa}</CB>\n\n`;
-      receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR_58MM}</C>\n\n`;
+      receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n\n`;
+      receiptText += `<CB>MESA ${mesa.mesa}</CB>\n\n`;
+      receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n\n`;
 
       // Adiciona os itens sem preços, destacando a quantidade
       items.forEach(item => {
         receiptText += `<B>${item.quantity}x ${item.name}</B> \n`;
-        receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_58MM}</C>\n\n`;
+        receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n\n`;
       });
 
       // Adiciona data e hora
-      receiptText += `\n<C>${new Date().toLocaleString('pt-BR')}</C>\n\n\n`;
+      receiptText += `\n<C>${new Date().toLocaleString('pt-BR')}</C>\n`;
 
       // Imprime o recibo completo
       NetPrinter.printBill(receiptText);

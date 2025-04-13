@@ -1,6 +1,6 @@
 import React from 'react';
 import {SvgProps} from 'react-native-svg';
-import logo from '../../assets/logoKukan.png';
+import {useAuth} from '../../context/AuthContext';
 import {
   Container,
   Logo,
@@ -26,10 +26,11 @@ function NavProducts({
   activeIndex,
   itens = [],
 }: NavProductsProps) {
+  const {settings} = useAuth();
   return (
     <Container>
       <Logo>
-        <LogoImage resizeMode="cover" source={logo} />
+        <LogoImage resizeMode="cover" source={{uri: settings.logo}} />
       </Logo>
       <NavList>
         {itens.map((item, index) => {

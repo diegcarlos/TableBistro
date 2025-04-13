@@ -27,7 +27,7 @@ export function ModalCallWaiter(props: Props) {
   const handlePressTalkWaiter = async () => {
     try {
       onClose?.(false);
-      const text = `<CB>CHAMANDO GARCOM DA MESA ${mesa}</CB>`;
+      const text = `<CB>CHAMANDO GARCOM DA MESA ${mesa.mesa}</CB>`;
       await printText(text, {
         host: '192.168.3.220',
         port: 9100,

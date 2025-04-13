@@ -5,6 +5,7 @@ import React, {useEffect, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 import {Dimensions, Keyboard, ScrollView} from 'react-native';
 import {z} from 'zod';
+import LogoBistro from '../../assets/logo.svg';
 import EnterpriseIcon from '../../assets/svg/enterprise.svg';
 import PadLockIcon from '../../assets/svg/padLock.svg';
 import UserIcon from '../../assets/svg/user.svg';
@@ -28,7 +29,7 @@ import {
 const loginSchema = z.object({
   username: z.string().min(1, 'Usuário é obrigatório'),
   password: z.string().min(1, 'Senha é obrigatória'),
-  cnpj: z.string().min(14, 'CNPJ deve ter 14 dígitos').max(14),
+  cnpj: z.string().min(11, 'campo deve ter de 11 a 14 dígitos').max(14),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -42,7 +43,7 @@ const formatCNPJ = (value: string) => {
 };
 
 export function LoginScreen({navigation}: {navigation: any}) {
-  const {signIn, user} = useAuth();
+  const {signIn, settings} = useAuth();
 
   const {visible, text, showTooltip, hideTooltip} = useTooltip();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -159,7 +160,11 @@ export function LoginScreen({navigation}: {navigation: any}) {
         {visible && <Tooltip text={text} onClose={hideTooltip} />}
         <FormContainer>
           <LogoContainer>
-            <Logo source={require('../../assets/logoKukan.png')} />
+            {settings.logo ? (
+              <Logo source={{uri: settings?.logo}} />
+            ) : (
+              <LogoBistro width={100} height={100} />
+            )}
           </LogoContainer>
 
           <Controller

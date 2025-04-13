@@ -94,7 +94,7 @@ function HeaderProducts(props: Props) {
       <ViewMesa>
         <TextMesa>Mesa: </TextMesa>
         <TextNumMesa>
-          <TextMesa>{mesa}</TextMesa>
+          <TextMesa>{mesa?.mesa || ''}</TextMesa>
         </TextNumMesa>
       </ViewMesa>
       <MenuHeader>

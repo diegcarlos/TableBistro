@@ -30,14 +30,30 @@ interface PayloadLoginProps {
 
 interface AuthContextData {
   user: PropsUser | null;
-  mesa: string;
-  setMesaStorage: (mesa: string) => void;
+  mesa: PropsMesa;
+  settings: {
+    cnpj: string;
+    name: string;
+    logo: string;
+    email: string;
+    phone: string;
+    Banner: {
+      id: string;
+      url: string;
+      nome: string;
+    }[];
+  };
+  setMesaStorage: (mesa: string, id: string) => void;
   signIn: (
     data: PayloadLoginProps,
   ) => Promise<AxiosResponse<PropsLoginResponse>>;
   signOut: () => void;
 }
 
+interface PropsMesa {
+  mesa: number;
+  idMesa: string;
+}
 const AuthContext = createContext<AuthContextData | undefined>(undefined);
 
 interface AuthProviderProps {
@@ -46,7 +62,25 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const [user, setUser] = useState<PropsUser | null>(null);
-  const [mesa, setMesa] = useState('');
+  const [mesa, setMesa] = useState<{mesa: number; idMesa: string}>(
+    {} as PropsMesa,
+  );
+  const [settings, setSettings] = useState({
+    cnpj: '',
+    name: '',
+    logo: '',
+    email: '',
+    phone: '',
+    Banner: [] as {id: string; url: string; nome: string}[],
+  });
+
+  const onSettings = async () => {
+    const stt = await api.get('/settings');
+    if (stt.status === 200) {
+      await AsyncStorage.setItem('settings', JSON.stringify(stt.data));
+      setSettings(stt.data);
+    }
+  };
 
   const signIn = async (sign: PayloadLoginProps) => {
     const resp: AxiosResponse<PropsLoginResponse> = await api.post(
@@ -59,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         'access-token',
         JSON.stringify(resp.data.token),
       );
+      onSettings();
       setUser(resp.data.user);
     }
     return resp;
@@ -68,19 +103,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     setUser(null);
   };
 
-  const setMesaStorage = async (numMesa: string) => {
-    await AsyncStorage.setItem('mesa', numMesa);
-    setMesa(numMesa);
+  const setMesaStorage = async (numMesa: string, idMesa: string) => {
+    await AsyncStorage.setItem('mesa', JSON.stringify({num: numMesa, idMesa}));
+    setMesa({mesa: Number(numMesa), idMesa});
   };
 
   useEffect(() => {
     const fetch = async () => {
       const user = await AsyncStorage.getItem('user');
       const userParse: PropsUser = JSON.parse(user || '');
+      const settings = await AsyncStorage.getItem('settings');
+      if (settings) {
+        const settingsParse = JSON.parse(settings);
+        setSettings(settingsParse);
+      }
 
       const storageMesa = await AsyncStorage.getItem('mesa');
       if (storageMesa) {
-        setMesa(storageMesa);
+        const mesa = JSON.parse(storageMesa);
+        setMesa({mesa: Number(mesa.num), idMesa: mesa.idMesa});
       }
 
       setUser(userParse);
@@ -90,7 +131,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{user, signIn, signOut, mesa, setMesaStorage}}>
+    <AuthContext.Provider
+      value={{user, signIn, signOut, mesa, setMesaStorage, settings}}>
       {children}
     </AuthContext.Provider>
   );
