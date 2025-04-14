@@ -88,9 +88,12 @@ export function Product(props: Props) {
       setDataSteps(newDataSteps);
     }
     if (index > dataSteps.length - 1) {
+      console.log(qtd);
       onProductFinish?.(
         {
+          id: product.id,
           name: product.nome,
+          externoId: product.externoId,
           image: product.imagem,
           description: product.descricao,
           categoriaId: product.categoriaId,
@@ -175,7 +178,9 @@ export function Product(props: Props) {
                   <AddRemove
                     key={st.type}
                     value={qtd}
-                    onChange={setQtd}
+                    onChange={qtd => {
+                      setQtd(qtd);
+                    }}
                     minValue={1}
                   />
                 );

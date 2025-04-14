@@ -1,4 +1,5 @@
 import React from 'react';
+import {ActivityIndicator} from 'react-native';
 import MyAccount from '../../assets/svg/meyAccount.svg';
 import MyCartIcon from '../../assets/svg/meyCart.svg';
 import SearchIcon from '../../assets/svg/search.svg';
@@ -31,10 +32,11 @@ interface Props {
   onPressWaiter?: () => void;
   onPressWallet?: () => void;
   onPressShopCar?: () => void;
+  loading?: boolean;
 }
 
 function HeaderProducts(props: Props) {
-  const {onPressWaiter, onPressWallet, onPressShopCar} = props;
+  const {onPressWaiter, onPressWallet, onPressShopCar, loading = false} = props;
   const {mesa} = useAuth();
   const {cartItems} = useCart();
 
@@ -88,6 +90,14 @@ function HeaderProducts(props: Props) {
     inputRange: [-1, 0, 1],
     outputRange: ['-30deg', '0deg', '30deg'],
   });
+
+  if (loading) {
+    return (
+      <Container>
+        <ActivityIndicator size="large" color="#E11D48" style={{flex: 1}} />
+      </Container>
+    );
+  }
 
   return (
     <Container>

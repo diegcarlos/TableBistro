@@ -21,12 +21,13 @@ import {Product} from '../../components/Product';
 import {useAuth} from '../../context/AuthContext';
 import {CartItems, useCart} from '../../context/CartContext';
 import api from '../../http/api';
+import {PaginatedResult} from '../../types/pagination';
 import {Category, Product as TypesProduct} from '../../types/products';
 import {Container, ContentFluid} from './styles';
 
-const Products = () => {
+const Products = ({navigation}: {navigation: any}) => {
   const {addToCart, setDataProducts} = useCart();
-  const {user} = useAuth();
+  const {user, checkAuthAndTable} = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
   const groupLayouts = useRef<{[key: string]: LayoutRectangle}>({});
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
@@ -37,12 +38,27 @@ const Products = () => {
   const [isDrawerWallet, setIsDrawerWallet] = useState(false);
   const [isDrawerShopCar, setIsDrawerShopCar] = useState(false);
 
-  const products = useQuery<AxiosResponse<Category[]>>({
-    queryKey: ['Products'],
-    queryFn: () =>
-      api.get(`/restaurantCnpj/${user?.restaurantCnpj}/categorias`),
-  });
+  // Verificar autenticação e mesa selecionada
+  useEffect(() => {
+    const {isAuthenticated, hasMesa} = checkAuthAndTable();
 
+    if (!isAuthenticated) {
+      navigation.replace('Login');
+      return;
+    }
+
+    if (!hasMesa) {
+      navigation.replace('InsertTable');
+      return;
+    }
+  }, []);
+
+  const products = useQuery<AxiosResponse, Error, PaginatedResult<Category>>({
+    queryKey: ['Products'],
+    queryFn: async () =>
+      await api.get(`/restaurantCnpj/${user?.restaurantCnpj}/categorias`),
+    select: data => data.data,
+  });
   const onGroupLayout = useCallback(
     (groupId: string, layout: LayoutRectangle) => {
       groupLayouts.current[groupId] = layout;
@@ -51,9 +67,9 @@ const Products = () => {
   );
 
   const scrollToGroup = (index: number) => {
-    const group = products.data?.data[index];
+    const group = products.data?.data?.[index];
     if (group && scrollViewRef.current && groupLayouts.current[group.id]) {
-      const layout = groupLayouts.current[group.id];
+      const layout = groupLayouts.current[group?.id];
 
       scrollViewRef.current.scrollTo({
         y: Math.max(0, layout.y),
@@ -63,6 +79,7 @@ const Products = () => {
   };
 
   const handleAddCard = (data: CartItems, index: number | null) => {
+    console.log(data, index);
     if (index !== null) {
       addToCart(data);
     }
@@ -73,7 +90,7 @@ const Products = () => {
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const scrollY = event.nativeEvent.contentOffset.y;
 
-      const visibleGroups = products.data?.data.filter(
+      const visibleGroups = products.data?.data?.filter(
         g => g.produtos.length > 0,
       );
       let closestGroup = 0;
@@ -97,7 +114,7 @@ const Products = () => {
       ) {
         const activeGroupId = visibleGroups[closestGroup].id;
         const activeIndex =
-          products.data?.data.findIndex(g => g.id === activeGroupId) ?? 0;
+          products.data?.data?.findIndex(g => g.id === activeGroupId) ?? 0;
         setActiveGroupIndex(activeIndex);
       }
     },
@@ -114,8 +131,9 @@ const Products = () => {
       <NavProducts
         onSelectGroup={scrollToGroup}
         activeIndex={activeGroupIndex}
+        loading={products.isLoading}
         itens={
-          products.data?.data.map(pro => {
+          products.data?.data?.map(pro => {
             return {name: pro.nome};
           }) || []
         }
@@ -125,14 +143,15 @@ const Products = () => {
           onPressWaiter={() => setIsModalWaiter(true)}
           onPressWallet={() => setIsDrawerWallet(true)}
           onPressShopCar={() => setIsDrawerShopCar(true)}
+          loading={products.isLoading}
         />
-        <ContentProducts>
+        <ContentProducts loading={products.isLoading || products.isFetching}>
           <ScrollView
             ref={scrollViewRef}
             onScroll={onScroll}
             scrollEventThrottle={16}
             style={{flex: 1}}>
-            {products.data?.data.map((group, index) => {
+            {products.data?.data?.map((group, index) => {
               return (
                 <GroupItens
                   key={group.id}
@@ -141,7 +160,7 @@ const Products = () => {
                     onGroupLayout(group.id, event.nativeEvent.layout)
                   }>
                   <View style={{gap: 16}}>
-                    {group.produtos.map((product, i) => (
+                    {group?.produtos.map((product, i) => (
                       <CardProducts
                         onPressAdd={() => {
                           setSelectProduct(product);
@@ -154,6 +173,7 @@ const Products = () => {
                         description={product.descricao}
                         price={product.preco}
                         discount={0}
+                        loading={products.isLoading}
                       />
                     ))}
                   </View>

@@ -48,6 +48,9 @@ interface AuthContextData {
     data: PayloadLoginProps,
   ) => Promise<AxiosResponse<PropsLoginResponse>>;
   signOut: () => void;
+  isAuthenticated: () => boolean;
+  hasMesaSelected: () => boolean;
+  checkAuthAndTable: () => {isAuthenticated: boolean; hasMesa: boolean};
 }
 
 interface PropsMesa {
@@ -99,8 +102,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     return resp;
   };
 
-  const signOut = () => {
-    setUser(null);
+  const signOut = async () => {
+    try {
+      // Limpa os estados
+      setUser(null);
+      setMesa({} as PropsMesa);
+
+      // Remove todos os dados do AsyncStorage
+      await AsyncStorage.multiRemove([
+        'user',
+        'access-token',
+        'mesa',
+        'settings',
+        // Adicione aqui outros itens que precisam ser removidos
+      ]);
+
+      console.log('Logout realizado com sucesso');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   const setMesaStorage = async (numMesa: string, idMesa: string) => {
@@ -108,10 +128,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     setMesa({mesa: Number(numMesa), idMesa});
   };
 
+  const isAuthenticated = () => {
+    return user !== null;
+  };
+
+  const hasMesaSelected = () => {
+    return mesa && mesa.idMesa ? true : false;
+  };
+
+  const checkAuthAndTable = () => {
+    return {
+      isAuthenticated: isAuthenticated(),
+      hasMesa: hasMesaSelected(),
+    };
+  };
+
   useEffect(() => {
     const fetch = async () => {
       const user = await AsyncStorage.getItem('user');
-      const userParse: PropsUser = JSON.parse(user || '');
       const settings = await AsyncStorage.getItem('settings');
       if (settings) {
         const settingsParse = JSON.parse(settings);
@@ -124,7 +158,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         setMesa({mesa: Number(mesa.num), idMesa: mesa.idMesa});
       }
 
-      setUser(userParse);
+      if (user) {
+        const userParse: PropsUser = JSON.parse(user);
+        setUser(userParse);
+      }
     };
 
     fetch();
@@ -132,7 +169,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
 
   return (
     <AuthContext.Provider
-      value={{user, signIn, signOut, mesa, setMesaStorage, settings}}>
+      value={{
+        user,
+        signIn,
+        signOut,
+        mesa,
+        setMesaStorage,
+        settings,
+        isAuthenticated,
+        hasMesaSelected,
+        checkAuthAndTable,
+      }}>
       {children}
     </AuthContext.Provider>
   );

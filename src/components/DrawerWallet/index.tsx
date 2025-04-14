@@ -1,4 +1,7 @@
+import {useEffect, useState} from 'react';
 import {useCart} from '../../context/CartContext';
+import {PedidoTable} from '../../types/pedidoTable';
+import BarLoader from '../BarLoader';
 import {ButtonRed} from '../ButtonRed';
 import {Drawer} from '../Drawer';
 import {
@@ -25,48 +28,79 @@ interface Props {
 }
 
 export function DrawerWallet(props: Props) {
-  const {dataWallet} = useCart();
+  const {getOrderTable} = useCart();
   const {isOpen = false, onClose} = props;
+  const [dataPedido, setDataPedido] = useState({} as PedidoTable);
+  const [loading, setLoading] = useState(false);
+
+  const get = async () => {
+    setLoading(true);
+    try {
+      const resp = await getOrderTable();
+      setDataPedido(resp);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      get();
+    }
+
+    return () => {
+      setDataPedido({} as PedidoTable);
+    };
+  }, [isOpen]);
+
   return (
     <Drawer
       isOpen={isOpen}
       title="Minha Conta"
       onClose={() => onClose?.(false)}>
       <Container>
-        <ScrollViewItems>
-          {dataWallet.map(wall => (
-            <ViewItems key={wall.name}>
-              <ViewItemsProduct>
-                <TextItemsProduct>{wall.name}</TextItemsProduct>
-                <TextItemsProductDesc numberOfLines={1} ellipsizeMode="tail">
-                  {wall.description}
-                </TextItemsProductDesc>
-              </ViewItemsProduct>
-              <ViewItemsValues>
-                <TextItemsValues>
-                  <TextItemsQuantity>{wall.quantity}x </TextItemsQuantity>
+        {loading ? (
+          <BarLoader
+            size={50}
+            color="#E11D48"
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
+          />
+        ) : (
+          <ScrollViewItems>
+            {dataPedido?.produtos?.map((wall, i) => (
+              <ViewItems key={wall?.produto?.codigo + i}>
+                <ViewItemsProduct>
+                  <TextItemsProduct>{wall?.produto?.nome}</TextItemsProduct>
+                  <TextItemsProductDesc numberOfLines={1} ellipsizeMode="tail">
+                    {wall?.produto?.descricao}
+                  </TextItemsProductDesc>
+                </ViewItemsProduct>
+                <ViewItemsValues>
                   <TextItemsValues>
-                    {wall.price.toLocaleString('pt-BR', {
-                      currency: 'BRL',
-                      style: 'currency',
-                    })}
+                    <TextItemsQuantity>{wall.quantidade}x </TextItemsQuantity>
+                    <TextItemsValues>
+                      {wall?.produto?.preco.toLocaleString('pt-BR', {
+                        currency: 'BRL',
+                        style: 'currency',
+                      })}
+                    </TextItemsValues>
                   </TextItemsValues>
-                </TextItemsValues>
-              </ViewItemsValues>
-            </ViewItems>
-          ))}
-        </ScrollViewItems>
+                </ViewItemsValues>
+              </ViewItems>
+            ))}
+          </ScrollViewItems>
+        )}
         <Footer>
           <FooterHeader>
             <FooterHeaderText>
-              {dataWallet.length} Items pedidos
+              {dataPedido?.produtos?.length} Items pedidos
             </FooterHeaderText>
             <FooterSubTotal>
               SubTotal:{' '}
               <FooterTotal>
-                {dataWallet
-                  .reduce((a, b) => a + b.price, 0)
-                  .toLocaleString('pt-BR', {
+                {dataPedido?.produtos
+                  ?.reduce((a, b) => a + b?.produto?.preco * b?.quantidade, 0)
+                  ?.toLocaleString('pt-BR', {
                     currency: 'BRL',
                     style: 'currency',
                   })}
@@ -74,7 +108,7 @@ export function DrawerWallet(props: Props) {
             </FooterSubTotal>
           </FooterHeader>
           <FooterButtons>
-            <ButtonRed block fontWeight="bold">
+            <ButtonRed block fontWeight="bold" loading={loading}>
               Finalizar a Conta
             </ButtonRed>
           </FooterButtons>

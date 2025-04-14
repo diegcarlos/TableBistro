@@ -20,6 +20,7 @@ import {
   Title,
 } from './styles';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BackSpaceIcon from '../../assets/svg/backSpace.svg';
 import TableIcon from '../../assets/svg/table.svg';
 import Tooltip, {useTooltip} from '../../components/Toltip';
@@ -28,10 +29,26 @@ import api from '../../http/api';
 
 export function NumericKeyboard({navigation}: any) {
   const {showTooltip, visible, hideTooltip, text} = useTooltip();
-  const {user, setMesaStorage, mesa} = useAuth();
+  const {user, setMesaStorage, mesa, isAuthenticated} = useAuth();
   const [value, setValue] = useState('');
   const [isLandscape, setIsLandscape] = useState(false);
   const {width, height} = useWindowDimensions();
+
+  // Verificar se o usuário está autenticado
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      // Verificar diretamente no AsyncStorage para garantir que temos as informações mais recentes
+      const userStored = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('access-token');
+
+      if (!userStored || !token) {
+        // Se não estiver autenticado, redirecionar para o login
+        navigation.replace('Login');
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   const handleNumberPress = (number: string) => {
     if (value.length < 4) {
@@ -62,7 +79,7 @@ export function NumericKeyboard({navigation}: any) {
 
       if (resp.status === 200) {
         setMesaStorage(String(value), resp.data.id);
-        navigation.navigate('Products');
+        navigation.navigate('Home');
       }
     } catch (error: any) {
       console.error('Erro ao confirmar mesa:', error);

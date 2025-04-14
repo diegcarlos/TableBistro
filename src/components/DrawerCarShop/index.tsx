@@ -11,7 +11,6 @@ interface Props {
 export function DrawerCarShop(props: Props) {
   const {isOpen, onClose} = props;
   const {cartItems, updateQuantity, onFinish} = useCart();
-
   return (
     <Drawer
       placement="right"

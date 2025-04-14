@@ -1,5 +1,6 @@
 import React from 'react';
-import {ActivityIndicator, StyleProp, ViewStyle} from 'react-native';
+import {StyleProp, ViewStyle} from 'react-native';
+import BarLoader from '../BarLoader';
 import {
   ButtonTextBold,
   ButtonTextMedium,
@@ -49,7 +50,7 @@ export function ButtonRed({
       onPress={loading ? undefined : onPress}
       disabled={loading}>
       {loading ? (
-        <ActivityIndicator color="#FFFFFF" size="small" />
+        <BarLoader color="#FFFFFF" size={20} style={{margin: 0}} />
       ) : (
         ButtonText(fontWeight, children)
       )}

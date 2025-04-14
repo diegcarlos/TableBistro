@@ -1,6 +1,8 @@
 import React from 'react';
+import {View} from 'react-native';
 import {SvgProps} from 'react-native-svg';
 import {useAuth} from '../../context/AuthContext';
+import BarLoader from '../BarLoader';
 import {
   Container,
   Logo,
@@ -19,12 +21,14 @@ interface NavProductsProps {
   onSelectGroup: (index: number) => void;
   activeIndex: number;
   itens: NavItem[];
+  loading?: boolean;
 }
 
 function NavProducts({
   onSelectGroup,
   activeIndex,
   itens = [],
+  loading = false,
 }: NavProductsProps) {
   const {settings} = useAuth();
   return (
@@ -33,18 +37,24 @@ function NavProducts({
         <LogoImage resizeMode="cover" source={{uri: settings.logo}} />
       </Logo>
       <NavList>
-        {itens.map((item, index) => {
-          const Icon = item.Icon;
-          return (
-            <NavItem
-              onPress={() => onSelectGroup(index)}
-              isActive={activeIndex === index}
-              key={item.name}>
-              {Icon && <Icon width={24} height={24} />}
-              <NavItemText>{item.name}</NavItemText>
-            </NavItem>
-          );
-        })}
+        {loading ? (
+          <View style={{marginTop: 20, height: 100}}>
+            <BarLoader size={40} color="#E11D48" />
+          </View>
+        ) : (
+          itens.map((item, index) => {
+            const Icon = item.Icon;
+            return (
+              <NavItem
+                onPress={() => onSelectGroup(index)}
+                isActive={activeIndex === index}
+                key={item.name}>
+                {Icon && <Icon width={24} height={24} />}
+                <NavItemText>{item.name}</NavItemText>
+              </NavItem>
+            );
+          })
+        )}
       </NavList>
     </Container>
   );

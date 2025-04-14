@@ -13,7 +13,7 @@ interface AddRemoveProps {
 const AddRemove: React.FC<AddRemoveProps> = ({
   value = 0,
   onChange,
-  minValue = 0,
+  minValue = 1,
   maxValue = Infinity,
 }) => {
   const handleDecrement = () => {

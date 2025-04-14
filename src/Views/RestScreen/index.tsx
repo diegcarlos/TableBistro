@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useEffect} from 'react';
 import Swiper from 'react-native-swiper';
 import BottomScreen from '../../assets/screenBottom.png';
@@ -17,21 +18,36 @@ import {
 } from './styles';
 
 export function RestScreen({navigation}: {navigation: any}) {
-  const {user, mesa, settings} = useAuth();
+  const {settings} = useAuth();
+
   const handelPressNext = () => {
-    if (user && mesa.idMesa) {
-      navigation.navigate('Products');
-    } else {
-      if (user) {
-        navigation.navigate('InsertTable');
-      } else {
-        navigation.navigate('Login');
-      }
-    }
+    navigation.navigate('Products');
   };
 
   useEffect(() => {
-    handelPressNext();
+    const checkAuthAndRedirect = async () => {
+      // Verificar se existe um usuário salvo no AsyncStorage
+      const userStored = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('access-token');
+
+      if (userStored && token) {
+        // Usuário já está logado, verificar se tem mesa selecionada
+        const mesaStored = await AsyncStorage.getItem('mesa');
+
+        if (mesaStored) {
+          // Tem mesa selecionada, mas permanece na Home em vez de ir para Products
+          // Não redireciona automaticamente
+        } else {
+          // Não tem mesa selecionada, ir para InsertTable
+          navigation.replace('InsertTable');
+        }
+      } else {
+        // Não está logado, mostrar a tela de boas-vindas
+        // Não redireciona automaticamente para o login
+      }
+    };
+
+    checkAuthAndRedirect();
   }, []);
 
   return (

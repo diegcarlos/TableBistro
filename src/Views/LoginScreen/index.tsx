@@ -43,9 +43,33 @@ const formatCNPJ = (value: string) => {
 };
 
 export function LoginScreen({navigation}: {navigation: any}) {
-  const {signIn, settings} = useAuth();
+  const {signIn, settings, isAuthenticated, hasMesaSelected} = useAuth();
 
   const {visible, text, showTooltip, hideTooltip} = useTooltip();
+
+  // Verificar se o usuário já está autenticado
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      // Verificar diretamente no AsyncStorage para garantir que temos as informações mais recentes
+      const userStored = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('access-token');
+
+      if (userStored && token) {
+        // Usuário já está logado, verificar se tem mesa selecionada
+        const mesaStored = await AsyncStorage.getItem('mesa');
+
+        if (mesaStored) {
+          // Tem mesa selecionada, ir direto para Products
+          navigation.replace('Products');
+        } else {
+          // Não tem mesa selecionada, ir para InsertTable
+          navigation.replace('InsertTable');
+        }
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [loading, setLoading] = useState(false);
   const screenHeight = Dimensions.get('screen').height;
@@ -127,7 +151,12 @@ export function LoginScreen({navigation}: {navigation: any}) {
         if (savePassword === true) {
           handleSavePassword(data);
         }
-        navigation.replace('Home');
+        // Após login bem-sucedido, verificar se já tem mesa selecionada
+        if (hasMesaSelected()) {
+          navigation.navigate('Products');
+        } else {
+          navigation.navigate('InsertTable');
+        }
         reset();
       }
       setLoading(false);

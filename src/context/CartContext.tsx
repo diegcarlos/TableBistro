@@ -1,6 +1,9 @@
+import {AxiosResponse} from 'axios';
 import _ from 'lodash';
 import React, {createContext, useContext, useState} from 'react';
 import {usePrinter} from '../hooks/usePrinter';
+import api from '../http/api';
+import {PedidoTable} from '../types/pedidoTable';
 import {Category} from '../types/products';
 import {useAuth} from './AuthContext';
 
@@ -8,6 +11,7 @@ export interface CartItems {
   id: string;
   name: string;
   price: number;
+  externoId?: string;
   quantity: number;
   image?: any;
   categoriaId?: string;
@@ -27,6 +31,7 @@ interface CartContextData {
   updateQuantity: (index: number, quantity: number) => void;
   clearCart: () => void;
   isCartOpen: boolean;
+  getOrderTable: () => Promise<PedidoTable>;
   setIsCartOpen: (isOpen: boolean) => void;
   onFinish: () => void;
 }
@@ -46,19 +51,20 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
 
   const addToCart = (item: CartItems) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(prev => prev.name === item.name);
-      if (existingItem) {
-        return prevItems.map(prev =>
-          prev.name === item.name
-            ? {
-                ...prev,
-                quantity: prev.quantity + 1,
-                total: item.price * (prev.quantity + 1),
-              }
-            : prev,
-        );
-      }
-      return [...prevItems, {...item, quantity: 1, total: item.price}];
+      //COMENTADO POIS NÃO POSSO AGRUPAR POR PRODUTO POIS COMPLEMENTO PODE VARIAR
+      // const existingItem = prevItems.find(prev => prev.name === item.name);
+      // if (existingItem) {
+      //   return prevItems.map(prev =>
+      //     prev.name === item.name
+      //       ? {
+      //           ...prev,
+      //           quantity: prev.quantity + item.quantity,
+      //           total: item.price * (prev.quantity + item.quantity),
+      //         }
+      //       : prev,
+      //   );
+      // }
+      return [...prevItems, {...item, total: item.price * item.quantity}];
     });
   };
 
@@ -78,19 +84,46 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
     setCartItems([]);
   };
 
+  const getOrderTable = async () => {
+    const resp: AxiosResponse<PedidoTable> = await api.get(
+      `/pedidos/mesa/${mesa.idMesa}`,
+      {params: {status: 'ABERTO'}},
+    );
+    return resp.data;
+  };
+
   const onFinish = async () => {
     if (cartItems.length > 0 && dataProducts.length > 0) {
-      // const resp = await api.post('/pedidos', {
-      //   mesa: mesa.idMesa,
-      //   status: 'ABERTO',
-      //   produtos: cartItems.map(item => {
-      //     return {
-      //       produtoId: item.id,
-      //       status: 'PREPARANDO',
-      //       quantidade: item.quantity,
-      //     };
-      //   }),
-      // });
+      const isOrders = await getOrderTable();
+
+      if (!isOrders.id) {
+        await api.post('/pedidos', {
+          mesa: mesa.idMesa,
+          status: 'ABERTO',
+          produtos: cartItems.map(item => {
+            return {
+              produtoId: item.id,
+              externoId: item.externoId,
+              status: 'PREPARANDO',
+              quantidade: item.quantity,
+            };
+          }),
+        });
+      } else {
+        await api.put(`/pedidos/${isOrders.id}`, {
+          id: isOrders.id,
+          mesa: mesa.idMesa,
+          status: 'ABERTO',
+          produtos: cartItems.map(item => {
+            return {
+              produtoId: item.id,
+              externoId: item.externoId,
+              status: 'PREPARANDO',
+              quantidade: item.quantity,
+            };
+          }),
+        });
+      }
 
       setDataWallet(cartItems);
       const print = cartItems.map(item => {
@@ -135,6 +168,7 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
         dataProducts,
         setDataProducts,
         cartItems,
+        getOrderTable,
         addToCart,
         removeFromCart,
         dataWallet,
