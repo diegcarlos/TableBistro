@@ -1,3 +1,4 @@
+import React, {useState} from 'react';
 import {useCart} from '../../context/CartContext';
 import {Drawer} from '../Drawer';
 import {FooterShop} from '../FooterShop';
@@ -11,6 +12,19 @@ interface Props {
 export function DrawerCarShop(props: Props) {
   const {isOpen, onClose} = props;
   const {cartItems, updateQuantity, onFinish} = useCart();
+  const [total, setTotal] = useState(0);
+  const [isSending, setIsSending] = useState(false);
+
+  const handleCheckout = async () => {
+    setIsSending(true);
+    try {
+      await onFinish?.();
+      onClose?.(false);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <Drawer
       placement="right"
@@ -22,14 +36,13 @@ export function DrawerCarShop(props: Props) {
       <ShopItems
         onUpdate={(e, i) => updateQuantity(i, e.quantity)}
         products={cartItems}
+        onTotalChange={setTotal}
       />
       <FooterShop
-        onFinish={() => {
-          onFinish?.();
-          onClose?.(false);
-        }}
+        onCheckout={handleCheckout}
         countItems={cartItems?.length}
-        subTotal={cartItems?.reduce((a, b) => a + b.total, 0)}
+        subtotal={total}
+        loading={isSending}
       />
     </Drawer>
   );

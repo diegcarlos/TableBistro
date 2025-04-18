@@ -4,8 +4,9 @@ import {TextBold} from '../Text';
 export const Container = styled.View`
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  width: 275px;
+  justify-content: center;
+  width: 100%;
+  gap: 24px;
 `;
 
 export const Button = styled.TouchableOpacity`

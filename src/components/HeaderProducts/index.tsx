@@ -1,5 +1,4 @@
 import React from 'react';
-import {ActivityIndicator} from 'react-native';
 import MyAccount from '../../assets/svg/meyAccount.svg';
 import MyCartIcon from '../../assets/svg/meyCart.svg';
 import SearchIcon from '../../assets/svg/search.svg';
@@ -27,6 +26,7 @@ import {useEffect, useRef} from 'react';
 import {Animated, Easing} from 'react-native';
 import {useAuth} from '../../context/AuthContext';
 import {useCart} from '../../context/CartContext';
+import BarLoader from '../BarLoader';
 
 interface Props {
   onPressWaiter?: () => void;
@@ -94,7 +94,7 @@ function HeaderProducts(props: Props) {
   if (loading) {
     return (
       <Container>
-        <ActivityIndicator size="large" color="#E11D48" style={{flex: 1}} />
+        <BarLoader />
       </Container>
     );
   }

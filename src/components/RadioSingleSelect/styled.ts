@@ -10,6 +10,7 @@ export const Container = styled.ScrollView`
 export const Title = styled(TextMedium)`
   font-size: 16px;
   color: #d1d1d1;
+  margin-bottom: 16px;
 `;
 
 export const RadioContent = styled.TouchableOpacity`
@@ -31,10 +32,23 @@ export const Radio = styled.View<{check: boolean}>`
   border-radius: 50%;
   background-color: ${(p: any) => (p.check ? '#161616' : '#d4d5d7')};
   border: 2.5px solid #a8a8a8;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const RadioViewContent = styled.View`
+  flex-direction: column;
+  flex: 1;
 `;
 
 export const RadioText = styled(TextRegular)`
   font-size: 20px;
+  color: #d1d1d1;
+  margin-left: 16px;
+`;
+
+export const RadioPrice = styled(TextRegular)`
+  font-size: 12px;
   color: #d1d1d1;
   margin-left: 16px;
 `;

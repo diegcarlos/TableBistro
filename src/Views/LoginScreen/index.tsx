@@ -163,6 +163,7 @@ export function LoginScreen({navigation}: {navigation: any}) {
     } catch (error: any) {
       if (error instanceof AxiosError) {
         const err: AxiosError = error;
+        console.log('é aqui');
         console.log(err.toJSON());
       }
 

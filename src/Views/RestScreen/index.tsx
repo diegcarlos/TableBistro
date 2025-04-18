@@ -42,8 +42,8 @@ export function RestScreen({navigation}: {navigation: any}) {
           navigation.replace('InsertTable');
         }
       } else {
-        // Não está logado, mostrar a tela de boas-vindas
         // Não redireciona automaticamente para o login
+        navigation.replace('Login');
       }
     };
 
@@ -53,18 +53,18 @@ export function RestScreen({navigation}: {navigation: any}) {
   return (
     <Container>
       <ScreenTopContainer>
-        <ImgLogo source={{uri: settings?.logo}} />
+        <ImgLogo source={{uri: settings.data?.data.logo}} />
         <ScreenTop source={TopScreen} />
       </ScreenTopContainer>
 
       <Swiper autoplay autoplayTimeout={5} showsPagination={false}>
-        {settings?.Banner?.map((banner, index) => (
+        {settings?.data?.data?.Banner.map((banner, index) => (
           <StyledImage
-            key={banner.id}
-            source={{uri: banner.url}}
+            key={banner?.id}
+            source={{uri: banner?.url}}
             resizeMode="cover"
           />
-        ))}
+        )) || []}
       </Swiper>
 
       <ScreenBottomContainer>

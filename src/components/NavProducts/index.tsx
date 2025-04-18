@@ -34,7 +34,10 @@ function NavProducts({
   return (
     <Container>
       <Logo>
-        <LogoImage resizeMode="cover" source={{uri: settings.logo}} />
+        <LogoImage
+          resizeMode="cover"
+          source={{uri: settings.data?.data.logo}}
+        />
       </Logo>
       <NavList>
         {loading ? (

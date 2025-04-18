@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useQuery, UseQueryResult} from '@tanstack/react-query';
 import {AxiosResponse} from 'axios';
 import React, {
   createContext,
@@ -7,6 +8,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import {io, Socket} from 'socket.io-client';
 import api from '../http/api';
 
 export interface PropsUser {
@@ -20,6 +22,7 @@ export interface PropsUser {
 export interface PropsLoginResponse {
   token: string;
   user: PropsUser;
+  appToken: string;
 }
 
 interface PayloadLoginProps {
@@ -31,18 +34,9 @@ interface PayloadLoginProps {
 interface AuthContextData {
   user: PropsUser | null;
   mesa: PropsMesa;
-  settings: {
-    cnpj: string;
-    name: string;
-    logo: string;
-    email: string;
-    phone: string;
-    Banner: {
-      id: string;
-      url: string;
-      nome: string;
-    }[];
-  };
+  settings: UseQueryResult<{
+    data: PropsSettings;
+  }>;
   setMesaStorage: (mesa: string, id: string) => void;
   signIn: (
     data: PayloadLoginProps,
@@ -63,27 +57,39 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+interface PropsSettings {
+  cnpj: string;
+  name: string;
+  logo: string;
+  email: string;
+  phone: string;
+  Banner: {
+    id: string;
+    url: string;
+    nome: string;
+  }[];
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const [user, setUser] = useState<PropsUser | null>(null);
   const [mesa, setMesa] = useState<{mesa: number; idMesa: string}>(
     {} as PropsMesa,
   );
-  const [settings, setSettings] = useState({
-    cnpj: '',
-    name: '',
-    logo: '',
-    email: '',
-    phone: '',
-    Banner: [] as {id: string; url: string; nome: string}[],
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  const settings: UseQueryResult<{
+    data: PropsSettings;
+  }> = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const resp = await api.get('/settings');
+      return resp.data;
+    },
   });
 
-  const onSettings = async () => {
-    const stt = await api.get('/settings');
-    if (stt.status === 200) {
-      await AsyncStorage.setItem('settings', JSON.stringify(stt.data));
-      setSettings(stt.data);
-    }
-  };
+  if (settings.isFetched) {
+    AsyncStorage.setItem('settings', JSON.stringify(settings.data?.data));
+  }
 
   const signIn = async (sign: PayloadLoginProps) => {
     const resp: AxiosResponse<PropsLoginResponse> = await api.post(
@@ -93,17 +99,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     if (resp.status === 201) {
       await AsyncStorage.setItem('user', JSON.stringify(resp.data.user));
       await AsyncStorage.setItem(
+        'app-token',
+        JSON.stringify(resp.data.appToken),
+      );
+      await AsyncStorage.setItem(
         'access-token',
         JSON.stringify(resp.data.token),
       );
-      onSettings();
+      settings.refetch();
       setUser(resp.data.user);
+      // O socket será conectado automaticamente pelo useEffect que depende do user
     }
     return resp;
   };
 
   const signOut = async () => {
     try {
+      // Desconecta o socket se existir
+      if (socket) {
+        socket.disconnect();
+        setSocket(null);
+      }
+
       // Limpa os estados
       setUser(null);
       setMesa({} as PropsMesa);
@@ -146,11 +163,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   useEffect(() => {
     const fetch = async () => {
       const user = await AsyncStorage.getItem('user');
-      const settings = await AsyncStorage.getItem('settings');
-      if (settings) {
-        const settingsParse = JSON.parse(settings);
-        setSettings(settingsParse);
-      }
 
       const storageMesa = await AsyncStorage.getItem('mesa');
       if (storageMesa) {
@@ -166,6 +178,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
 
     fetch();
   }, []);
+
+  // Conecta ao socket e configura o listener para 'settings:updated'
+  useEffect(() => {
+    // Só conecta ao socket se o usuário estiver autenticado
+    if (user) {
+      // Conecta ao mesmo endereço da API
+      const socketInstance = io(
+        api.defaults.baseURL || 'http://192.168.3.3:4444',
+      );
+
+      socketInstance.on('connect', () => {
+        // Envia o CNPJ do restaurante ao conectar para se juntar à sala específica
+        if (user.restaurantCnpj) {
+          socketInstance.emit('join:restaurant', user.restaurantCnpj);
+          console.log(`Socket conectado para o CNPJ: ${user.restaurantCnpj}`);
+        }
+      });
+
+      // Escuta apenas atualizações específicas para o CNPJ do restaurante
+      socketInstance.on(`settings:updated:${user.restaurantCnpj}`, () => {
+        console.log(`Recebida atualização para o CNPJ: ${user.restaurantCnpj}`);
+        settings.refetch();
+      });
+
+      socketInstance.on('disconnect', () => {
+        console.log('Socket desconectado');
+      });
+
+      socketInstance.on('connect_error', error => {
+        console.error('Erro na conexão do socket:', error);
+      });
+
+      setSocket(socketInstance);
+
+      // Limpeza ao desmontar o componente ou quando o usuário fizer logout
+      return () => {
+        if (socketInstance) {
+          console.log('Desconectando socket...');
+          socketInstance.disconnect();
+        }
+      };
+    } else if (socket) {
+      // Se não há usuário mas existe um socket, desconecta
+      console.log('Usuário deslogado, desconectando socket...');
+      socket.disconnect();
+      setSocket(null);
+    }
+  }, [user]); // Dependência alterada para user para reconectar quando o usuário mudar
 
   return (
     <AuthContext.Provider

@@ -45,7 +45,7 @@ export const StepsOptions = styled.TouchableOpacity<{active: boolean}>`
   border-radius: 16px;
   margin-top: 16px;
   width: 100%;
-  height: 58px;
+  min-height: 58px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -83,10 +83,16 @@ export const StepsOptionsIconText = styled(TextRegular)`
   color: #bdbdbd;
   font-size: 20px;
 `;
+
 export const StepsOptionsText = styled(TextRegular)`
   color: #bdbdbd;
   font-size: 20px;
   margin-left: 8px;
+  flex: 1;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export const SubTotal = styled.View`
@@ -129,3 +135,36 @@ export const ComplementContent = styled.View`
 `;
 
 export const ComplementFooter = styled.View``;
+
+export const ValidationError = styled.View`
+  background-color: rgba(255, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-width: 1px;
+  border-color: red;
+`;
+
+export const ValidationErrorText = styled.Text`
+  color: red;
+  font-family: 'Montserrat-Medium';
+`;
+
+export const ObservationInput = styled.TextInput`
+  height: 120px;
+  background-color: #2c2c2c;
+  border-radius: 16px;
+  border-width: 1px;
+  border-color: #808080;
+  padding: 16px;
+  color: #f9f9f9;
+  font-size: 16px;
+  font-family: 'Montserrat-Medium';
+  text-align-vertical: top;
+`;
+
+export const StepsContainer = styled.View`
+  flex: 1;
+  width: 100%;
+  position: relative;
+`;

@@ -13,11 +13,13 @@ export interface CartItems {
   price: number;
   externoId?: string;
   quantity: number;
+  observacao?: string;
   image?: any;
   categoriaId?: string;
   description?: string;
   print?: {host: string; port: number};
   total: number;
+  selectedOptions?: {[key: string]: any[]};
 }
 
 interface CartContextData {
@@ -73,10 +75,49 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
   };
 
   const updateQuantity = (index: number, quantity: number) => {
-    setCartItems(prevItems =>
-      prevItems.map((item, i) =>
-        i === index ? {...item, quantity, total: item.price * quantity} : item,
-      ),
+    setCartItems(
+      prevItems =>
+        prevItems
+          .map((item, i) => {
+            if (i === index) {
+              if (quantity === 0) {
+                return null; // Será filtrado fora
+              }
+
+              // Atualizar a quantidade e o total
+              const updatedItem = {
+                ...item,
+                quantity,
+                total: item.price * quantity,
+              };
+
+              // Se houver adicionais, atualizar suas quantidades também
+              if (item.selectedOptions) {
+                const updatedOptions = Object.entries(
+                  item.selectedOptions,
+                ).reduce((acc, [key, options]) => {
+                  acc[key] = options.map(option => {
+                    if ('amount' in option) {
+                      // Calcular a quantidade original do adicional (dividindo pela quantidade atual)
+                      const originalAmount = option.amount / item.quantity;
+                      // Aplicar a nova quantidade
+                      return {
+                        ...option,
+                        amount: Math.round(originalAmount * quantity),
+                      };
+                    }
+                    return option;
+                  });
+                  return acc;
+                }, {} as {[key: string]: any[]});
+                updatedItem.selectedOptions = updatedOptions;
+              }
+
+              return updatedItem;
+            }
+            return item;
+          })
+          .filter(Boolean) as CartItems[],
     );
   };
 
@@ -104,6 +145,7 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
             return {
               produtoId: item.id,
               externoId: item.externoId,
+              obs: item.observacao,
               status: 'PREPARANDO',
               quantidade: item.quantity,
             };
@@ -119,6 +161,7 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
               produtoId: item.id,
               externoId: item.externoId,
               status: 'PREPARANDO',
+              obs: item.observacao,
               quantidade: item.quantity,
             };
           }),
@@ -131,34 +174,85 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
           return category.id === item.categoriaId;
         });
 
+        // Processar adicionais para impressão
+        const adicionais = item.selectedOptions
+          ? Object.values(item.selectedOptions).flatMap(options =>
+              options
+                .map(option => {
+                  if ('amount' in option && 'value' in option) {
+                    return {
+                      name: `  + ${option.amount}x ${option.name}`,
+                      quantity: 1,
+                      obs: '',
+                      price: option.value * option.amount,
+                    };
+                  } else if ('text' in option) {
+                    return {
+                      name: `  + ${option.text}`,
+                      quantity: 1,
+                      obs: '',
+                      price: 0,
+                    };
+                  }
+                  return null;
+                })
+                .filter(
+                  (
+                    item,
+                  ): item is {
+                    name: string;
+                    quantity: number;
+                    obs: string;
+                    price: number;
+                  } => item !== null,
+                ),
+            )
+          : [];
+
         return {
           name: item.name,
           quantity: item.quantity,
+          obs: item.observacao,
           price: item.price,
           Impressora: category?.Impressora,
+          adicionais,
         };
       });
 
       const groupPrints = _.groupBy(print, item => item.Impressora?.id);
 
-      Object.entries(groupPrints).forEach(([key, value]) => {
+      Object.entries(groupPrints).forEach(([_, value]) => {
         const printer = value[0].Impressora;
 
-        const items = value.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        }));
+        const items = value.flatMap(item => {
+          const baseItem = {
+            name: item.name,
+            quantity: item.quantity,
+            obs: item.obs,
+            price: item.price,
+          };
 
-        const total = cartItems.reduce((a, b) => a + b.total, 0);
+          // Incluir adicionais após o item principal
+          return [baseItem, ...item.adicionais];
+        });
+
+        const total = items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
 
         if (printer) {
           printBill(items, total, {
-            printer: {host: printer.ip, port: printer.port, name: printer.nome},
+            printer: {
+              host: printer.ip,
+              port: printer.porta,
+              name: printer.nome,
+            },
           });
         }
       });
       setIsCartOpen(false);
+      clearCart();
     }
   };
 

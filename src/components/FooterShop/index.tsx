@@ -1,8 +1,5 @@
-import {useCart} from '../../context/CartContext';
-import {
-  CancelButton,
-  CancelButtonText,
-} from '../../Views/NumericKeyboard/styles';
+import React from 'react';
+import {formatCurrency} from '../../utils/formatCurrency';
 import {ButtonRed} from '../ButtonRed';
 import {
   Container,
@@ -14,41 +11,32 @@ import {
 } from './styled';
 
 interface Props {
-  countItems: number;
-  onFinish?: () => void;
-  subTotal: number;
+  subtotal: number;
+  countItems?: number;
+  onCheckout: () => void;
+  loading?: boolean;
 }
 
-export function FooterShop(props: Props) {
-  const {clearCart} = useCart();
-  const {countItems = 0, subTotal = 0, onFinish} = props;
+export function FooterShop({
+  subtotal = 0,
+  countItems = 0,
+  onCheckout,
+  loading = false,
+}: Props) {
   return (
     <Container>
       <FooterHead>
         <TextCountItems>{countItems} Items pedidos</TextCountItems>
         <TextSubTotal>
-          Subtotal:{' '}
-          <TextTotal>
-            {subTotal?.toLocaleString('pt-BR', {
-              currency: 'BRL',
-              style: 'currency',
-            })}
-          </TextTotal>
+          Subtotal: <TextTotal>{formatCurrency(subtotal)}</TextTotal>
         </TextSubTotal>
       </FooterHead>
       <FooterButtons>
-        <CancelButton style={{width: '50%'}}>
-          <CancelButtonText style={{fontSize: 20}}>
-            Continuar Comprando
-          </CancelButtonText>
-        </CancelButton>
         <ButtonRed
-          onPress={() => {
-            clearCart?.();
-            onFinish?.();
-          }}
-          style={{width: '50%'}}
-          fontWeight="bold">
+          onPress={onCheckout}
+          block
+          fontWeight="bold"
+          loading={loading}>
           Fazer Pedido
         </ButtonRed>
       </FooterButtons>

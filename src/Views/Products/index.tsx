@@ -8,6 +8,7 @@ import {
   ScrollView,
   View,
 } from 'react-native';
+import io from 'socket.io-client';
 import CardProducts from '../../components/CardProducts';
 import ContentProducts from '../../components/ContentProducts';
 import {DrawerCarShop} from '../../components/DrawerCarShop';
@@ -28,6 +29,7 @@ import {Container, ContentFluid} from './styles';
 const Products = ({navigation}: {navigation: any}) => {
   const {addToCart, setDataProducts} = useCart();
   const {user, checkAuthAndTable} = useAuth();
+
   const scrollViewRef = useRef<ScrollView>(null);
   const groupLayouts = useRef<{[key: string]: LayoutRectangle}>({});
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
@@ -59,6 +61,30 @@ const Products = ({navigation}: {navigation: any}) => {
       await api.get(`/restaurantCnpj/${user?.restaurantCnpj}/categorias`),
     select: data => data.data,
   });
+
+  // Implementação do socket para atualizar status dos produtos
+  useEffect(() => {
+    if (user?.restaurantCnpj) {
+      const socket = io(api.defaults.baseURL || 'http://192.168.3.3:4444');
+
+      socket.on('connect', () => {
+        socket.emit('join:restaurant', user.restaurantCnpj);
+      });
+
+      socket.on(
+        `produto:status:updated:${user.restaurantCnpj}`,
+        (data: {produtoId: string; status: string}) => {
+          // Atualiza a lista de produtos quando houver mudança de status
+          products.refetch();
+        },
+      );
+
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [user?.restaurantCnpj, products]);
+
   const onGroupLayout = useCallback(
     (groupId: string, layout: LayoutRectangle) => {
       groupLayouts.current[groupId] = layout;
@@ -152,6 +178,27 @@ const Products = ({navigation}: {navigation: any}) => {
             scrollEventThrottle={16}
             style={{flex: 1}}>
             {products.data?.data?.map((group, index) => {
+              // Filtra os produtos ativos
+              const produtosAtivos = group.produtos.filter(produto => {
+                // Se o produto estiver ativo, exibe
+                if (produto.ativo) return true;
+
+                // Se não estiver ativo, verifica se tem adicionais com seleção única
+                if (group.adicionais && group.adicionais.length > 0) {
+                  return group.adicionais.some(
+                    adicional =>
+                      adicional.qtdMinima === 1 &&
+                      adicional.qtdMaxima === 1 &&
+                      adicional.opcoes.some(opcao => opcao.preco > 0),
+                  );
+                }
+
+                return false;
+              });
+
+              // Se não houver produtos ativos ou com adicionais válidos, não renderiza o grupo
+              if (produtosAtivos.length === 0) return null;
+
               return (
                 <GroupItens
                   key={group.id}
@@ -160,7 +207,7 @@ const Products = ({navigation}: {navigation: any}) => {
                     onGroupLayout(group.id, event.nativeEvent.layout)
                   }>
                   <View style={{gap: 16}}>
-                    {group?.produtos.map((product, i) => (
+                    {produtosAtivos.map((product, i) => (
                       <CardProducts
                         onPressAdd={() => {
                           setSelectProduct(product);
@@ -193,6 +240,7 @@ const Products = ({navigation}: {navigation: any}) => {
         onClose={() => setIsModalProduct(false)}>
         <Product
           product={selectProduct}
+          category={products.data?.data?.[activeGroupIndex]}
           onProductFinish={p => handleAddCard(p, indexProduct)}
           indexProduct={indexProduct}
         />

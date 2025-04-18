@@ -19,7 +19,7 @@ interface PrinterHook {
   connectPrinter: (host: string, port: number) => Promise<INetPrinter>;
   printText: (text: string, printer?: PrinterConfig) => Promise<void>;
   printBill: (
-    items: {name: string; quantity: number; price: number}[],
+    items: {name: string; quantity: number; obs?: string; price: number}[],
     total?: number,
     opt?: {
       printer?: PrinterConfig;
@@ -91,9 +91,9 @@ export const usePrinter = (): PrinterHook => {
       console.warn('Failed to print text:', error);
     }
   };
-
+  1;
   const printBill = async (
-    items: {name: string; quantity: number; price: number}[],
+    items: {name: string; obs?: string; quantity: number; price: number}[],
     total?: number,
     opt?: {
       printer?: PrinterConfig;
@@ -120,19 +120,44 @@ export const usePrinter = (): PrinterHook => {
         return;
       }
 
-      // Constrói o texto para impressão na cozinha
+      // Cabeçalho do pedido
       receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n`;
       receiptText += `<CB>MESA ${mesa.mesa}</CB>\n`;
-      receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n`;
+      receiptText += `<C>${new Date().toLocaleString('pt-BR')}</C>\n`;
+      receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n\n`;
 
-      // Adiciona os itens sem preços, destacando a quantidade
-      items.forEach(item => {
-        receiptText += `<B>${item.quantity}x ${item.name}</B> \n`;
+      // Agrupa itens por quantidade
+      const groupedItems = items.reduce((acc, item) => {
+        if (item.name.startsWith('  +')) {
+          // Adicionais são mantidos com seu item principal
+          const lastItem = acc[acc.length - 1];
+          if (lastItem) {
+            lastItem.adicionais = [...(lastItem.adicionais || []), item];
+          }
+        } else {
+          acc.push({...item, adicionais: []});
+        }
+        return acc;
+      }, [] as Array<(typeof items)[0] & {adicionais: typeof items}>);
+
+      // Imprime cada item com seus adicionais
+      groupedItems.forEach(item => {
+        // Item principal
+        receiptText += `<B>${item.quantity}x ${item.name}</B>\n`;
+        if (item.obs) {
+          receiptText += `<B>Obs: ${item.obs}</B>\n`;
+        }
+
+        // Adicionais do item
+        if (item.adicionais && item.adicionais.length > 0) {
+          receiptText += '<D>Adicionais:</D>\n';
+          item.adicionais.forEach(adicional => {
+            receiptText += `<D>${adicional.name}</D>\n`;
+          });
+        }
+
         receiptText += `<C>${COMMANDS.HORIZONTAL_LINE.HR3_80MM}</C>\n`;
       });
-
-      // Adiciona data e hora
-      receiptText += `\n<C>${new Date().toLocaleString('pt-BR')}</C>`;
 
       // Imprime o recibo completo
       NetPrinter.printBill(receiptText);

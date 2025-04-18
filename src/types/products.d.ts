@@ -1,24 +1,20 @@
 export interface Category {
   id: string;
+  status: boolean;
   nome: string;
   imagem: string;
   cor: string;
   ordem: number;
   temPromocao: boolean;
-  externoId: any;
+  externoId: string;
   restaurantCnpj: string;
   delete: boolean;
   createAt: string;
-  updateAt: any;
+  updateAt: string;
+  impressoraId: string;
   produtos: Product[];
-  Impressora: PrintTypes;
-}
-
-export interface PrintTypes {
-  id?: string;
-  nome: string;
-  ip: string;
-  port: number;
+  adicionais: Adicionai[];
+  Impressora: Impressora;
 }
 
 export interface Product {
@@ -28,10 +24,44 @@ export interface Product {
   imagem: string;
   preco: number;
   categoriaId: string;
-  externoId: any;
-  codigo: any;
+  externoId: string;
+  codigo: string;
   restaurantCnpj: string;
   delete: boolean;
   createAt: string;
-  updateAt: any;
+  updateAt: string;
+  ativo: boolean;
+}
+
+export interface Adicionai {
+  id: string;
+  titulo: string;
+  qtdMinima: number;
+  qtdMaxima: number;
+  obrigatorio: boolean;
+  createAt: string;
+  updateAt: string;
+  categoriaId: string;
+  opcoes: Opc[];
+}
+
+export interface Opc {
+  id: string;
+  nome: string;
+  preco: number;
+  codIntegra: string;
+  createAt: string;
+  updateAt: string;
+  adicionalHeaderId: string;
+}
+
+export interface Impressora {
+  id: string;
+  nome: string;
+  ip: string;
+  porta: number;
+  delete: boolean;
+  createAt: string;
+  updateAt: string;
+  restaurantCnpj: string;
 }
