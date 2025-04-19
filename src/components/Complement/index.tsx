@@ -14,10 +14,11 @@ import {
 } from './styled';
 
 interface ComplementItem {
-  id: string;
-  amount: number;
-  value: number;
   name: string;
+  value: number;
+  amount: number;
+  id: string;
+  codIntegra: string | null;
 }
 
 interface Props {

@@ -105,7 +105,6 @@ const Products = ({navigation}: {navigation: any}) => {
   };
 
   const handleAddCard = (data: CartItems, index: number | null) => {
-    console.log(data, index);
     if (index !== null) {
       addToCart(data);
     }
@@ -207,22 +206,26 @@ const Products = ({navigation}: {navigation: any}) => {
                     onGroupLayout(group.id, event.nativeEvent.layout)
                   }>
                   <View style={{gap: 16}}>
-                    {produtosAtivos.map((product, i) => (
-                      <CardProducts
-                        onPressAdd={() => {
-                          setSelectProduct(product);
-                          setIndexProduct(i);
-                          setIsModalProduct(true);
-                        }}
-                        key={product.id}
-                        image={product.imagem}
-                        title={product.nome}
-                        description={product.descricao}
-                        price={product.preco}
-                        discount={0}
-                        loading={products.isLoading}
-                      />
-                    ))}
+                    {produtosAtivos.map((product, i) => {
+                      if (product.ativo) {
+                        return (
+                          <CardProducts
+                            onPressAdd={() => {
+                              setSelectProduct(product);
+                              setIndexProduct(i);
+                              setIsModalProduct(true);
+                            }}
+                            key={product.id}
+                            image={product.imagem}
+                            title={product.nome}
+                            description={product.descricao}
+                            price={product.preco}
+                            discount={0}
+                            loading={products.isLoading}
+                          />
+                        );
+                      }
+                    })}
                   </View>
                 </GroupItens>
               );

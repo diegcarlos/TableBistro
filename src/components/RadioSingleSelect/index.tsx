@@ -11,18 +11,28 @@ import {
 } from './styled';
 
 interface RadioSelectSingleProps {
-  onChange?: (value: {id: number; text: string; price?: number}) => void;
+  onChange?: (value: {id: string; text: string; price?: number}) => void;
   dataRadio: {
     title: string;
-    data: {id: number; text: string; price?: number}[];
+    data: {
+      id: string;
+      text: string;
+      price?: number;
+      codIntegra: string | null;
+    }[];
   };
-  selectedOption?: {id: number; text: string; price?: number};
-  onSelect?: (option: {id: number; text: string; price?: number}) => void;
+  selectedOption?: {id: string; text: string; price?: number};
+  onSelect?: (option: {
+    id: string;
+    text: string;
+    price?: number;
+    codIntegra?: string | null;
+  }) => void;
 }
 
 export function RadioSelectSingle(props: RadioSelectSingleProps) {
   const {dataRadio, onChange, selectedOption, onSelect} = props;
-  const [select, setSelect] = useState<number | null>(null);
+  const [select, setSelect] = useState<string | null>(null);
 
   // Atualiza a seleção quando selectedOption muda externamente
   useEffect(() => {

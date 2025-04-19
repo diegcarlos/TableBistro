@@ -59,9 +59,10 @@ export function Product(props: Props) {
 
   // Interfaces para as opções selecionadas
   interface RadioOption {
-    id: number;
+    id: string;
     text: string;
     price?: number;
+    codIntegra?: string | null;
   }
 
   interface ComplementOption {
@@ -69,6 +70,7 @@ export function Product(props: Props) {
     name: string;
     value: number;
     amount: number;
+    codIntegra: string | null;
   }
 
   type SelectedOption = RadioOption | ComplementOption;
@@ -183,23 +185,21 @@ export function Product(props: Props) {
     }
 
     if (index > dataSteps.length - 1) {
-      onProductFinish?.(
-        {
-          id: product.id,
-          name: product.nome,
-          externoId: product.externoId,
-          image: product.imagem,
-          description: product.descricao,
-          categoriaId: product.categoriaId,
-          price: product.preco,
-          quantity: qtd,
-          total: product.preco * qtd,
-          observacao: observacao,
-          // Include selected options in the cart item
-          selectedOptions: selectedOptions,
-        },
-        indexProduct as number,
-      );
+      const cartItem = {
+        id: product.id,
+        name: product.nome,
+        externoId: product.externoId,
+        image: product.imagem,
+        description: product.descricao,
+        categoriaId: product.categoriaId,
+        price: product.preco,
+        quantity: qtd,
+        total: product.preco * qtd,
+        observacao: observacao,
+        selectedOptions: selectedOptions,
+      };
+
+      onProductFinish?.(cartItem, indexProduct as number);
     }
   };
 
@@ -212,8 +212,10 @@ export function Product(props: Props) {
       ...prev,
       [adicionalId]: [
         {
-          ...selectedOption,
-          price: selectedOption.price || 0,
+          id: selectedOption.id,
+          text: selectedOption.text,
+          price: selectedOption.price,
+          codIntegra: selectedOption.codIntegra || null,
         },
       ],
     }));
@@ -273,9 +275,16 @@ export function Product(props: Props) {
 
   useEffect(() => {
     // Criar steps dinâmicos baseados nos adicionais da categoria
-    if (category?.adicionais && category.adicionais.length > 0) {
-      const dynamicSteps: DataStep[] = category.adicionais.map(
-        (adicional, index) => ({
+    if (
+      category?.adicionais &&
+      category.adicionais.length > 0 &&
+      category.ativo
+    ) {
+      const dynamicSteps: DataStep[] = category.adicionais
+        .filter(
+          adicional => adicional.ativo && adicional.opcoes.some(op => op.ativo),
+        )
+        .map((adicional, index) => ({
           active: false,
           text: formatText(adicional.titulo),
           type:
@@ -284,8 +293,7 @@ export function Product(props: Props) {
               : 'comp',
           adicionalId: adicional.id,
           id: `step-${index}-${adicional.id}`,
-        }),
-      );
+        }));
 
       // Adicionar steps fixos ao final
       const allSteps = [
@@ -306,7 +314,7 @@ export function Product(props: Props) {
 
       setDataSteps(allSteps);
     } else {
-      // Caso não tenha adicionais, manter apenas os steps fixos
+      // Caso não tenha adicionais ativos, manter apenas os steps fixos
       setDataSteps([
         {
           active: false,
@@ -423,6 +431,9 @@ export function Product(props: Props) {
                   if (!isCurrentAdicional) {
                     return null;
                   }
+                  if (!adicional.ativo) {
+                    return null;
+                  }
 
                   if (adicional.qtdMinima === 1 && adicional.qtdMaxima === 1) {
                     return (
@@ -434,11 +445,19 @@ export function Product(props: Props) {
                               ? '(Obrigatório)'
                               : '(Opcional)'
                           }`,
-                          data: adicional.opcoes.map((op, i) => ({
-                            id: i,
-                            text: op.nome,
-                            price: op.preco,
-                          })),
+                          data: adicional.opcoes
+                            .filter(op => op.ativo)
+                            .map(op => {
+                              return {
+                                id: op.id,
+                                text: op.nome,
+                                price: op.preco,
+                                codIntegra:
+                                  !op.codIntegra || op.codIntegra.length === 0
+                                    ? null
+                                    : op.codIntegra,
+                              };
+                            }),
                         }}
                         onSelect={option =>
                           handleRadioSelect(adicional.id, option)
@@ -457,28 +476,33 @@ export function Product(props: Props) {
                             ? `(Obrigatório)`
                             : '(Opcional)'
                         }`}
-                        complements={adicional.opcoes.map(op => {
-                          const existingOption = selectedOptions[
-                            adicional.id
-                          ]?.find(
-                            item => 'name' in item && item.name === op.nome,
-                          ) as ComplementOption | undefined;
-                          return {
-                            name: op.nome,
-                            value: op.preco,
-                            amount: existingOption ? existingOption.amount : 0,
-                            id: op.id,
-                          };
-                        })}
+                        complements={adicional.opcoes
+                          .filter(op => op.ativo)
+                          .map(op => {
+                            const existingOption = selectedOptions[
+                              adicional.id
+                            ]?.find(
+                              item => 'name' in item && item.name === op.nome,
+                            ) as ComplementOption | undefined;
+                            return {
+                              name: op.nome,
+                              value: op.preco,
+                              amount: existingOption
+                                ? existingOption.amount
+                                : 0,
+                              id: op.id,
+                              codIntegra:
+                                !op.codIntegra || op.codIntegra.length === 0
+                                  ? null
+                                  : op.codIntegra,
+                            };
+                          })}
                         onChange={options =>
                           handleComplementSelect(adicional.id, options)
                         }
                         initialValues={
                           (selectedOptions[adicional.id]?.filter(
-                            option =>
-                              'amount' in option &&
-                              'value' in option &&
-                              'name' in option,
+                            option => 'amount' in option && 'name' in option,
                           ) as ComplementOption[]) || []
                         }
                         maxTotalItems={adicional.qtdMaxima}

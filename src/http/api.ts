@@ -17,7 +17,7 @@ api.interceptors.request.use(async config => {
       config.headers.Authorization = `Bearer ${JSON.parse(token)}`;
     }
     if (appToken) {
-      config.headers['app-token'] = `Bearer ${JSON.parse(appToken)}`;
+      config.headers['app-token'] = `${JSON.parse(appToken)}`;
     }
     return config;
   } catch (error) {

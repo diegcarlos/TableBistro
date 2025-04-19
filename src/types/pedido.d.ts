@@ -1,36 +1,38 @@
-export interface PedidoTable {
+export interface Pedido {
   id: string;
   status: string;
+  pdvCodPedido: string;
   mesa: Mesa;
   produtos: Produto[];
 }
 
-interface Mesa {
+export interface Mesa {
   numero: number;
   id: string;
 }
 
-interface Produto {
+export interface Produtos {
   produto: Produto2;
+  obs: string;
+  adicionais: Adicionais[];
   quantidade: number;
   status: string;
-  adicionais?: Adicionais[];
 }
 
-interface Produto2 {
+export interface Produto {
   nome: string;
   preco: number;
   descricao: string;
   codigo: string;
 }
 
-interface Adicionais {
+export interface Adicionais {
   adicional: Adicional;
   quantidade: number;
   preco: number;
 }
 
-interface Adicional {
+export interface Adicional {
   nome: string;
   preco: number;
   codIntegra: string;

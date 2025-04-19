@@ -1,6 +1,7 @@
 import React from 'react';
 import {Keyboard, TouchableWithoutFeedback, View} from 'react-native';
 import {CartItems} from '../../context/CartContext';
+import {formatCurrency} from '../../utils/formatCurrency';
 import {AddRemoveShop} from '../AddRemoveShop';
 import {
   ComplementText,
@@ -81,11 +82,38 @@ export function ShopItems(props: Props) {
                 {product.selectedOptions && (
                   <ComplementsContainer>
                     {Object.values(product.selectedOptions).map(
-                      (options, i) => (
-                        <View key={i}>
-                          {options.map((option, j) => {
-                            if ('amount' in option) {
-                              if ('value' in option && option.amount > 0) {
+                      (options, i) => {
+                        return (
+                          <View key={i}>
+                            {options.map((option, j) => {
+                              if ('amount' in option) {
+                                if ('value' in option && option.amount > 0) {
+                                  return (
+                                    <View
+                                      key={j}
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                      }}>
+                                      <ComplementText>
+                                        - {option.amount}x {option.name}{' '}
+                                        {option.codIntegra}
+                                      </ComplementText>
+                                      <ComplementValue>
+                                        {(
+                                          option.value * option.amount
+                                        ).toLocaleString('pt-BR', {
+                                          currency: 'BRL',
+                                          style: 'currency',
+                                        })}
+                                      </ComplementValue>
+                                    </View>
+                                  );
+                                }
+                              } else if (
+                                'text' in option &&
+                                'price' in option
+                              ) {
                                 return (
                                   <View
                                     key={j}
@@ -94,47 +122,24 @@ export function ShopItems(props: Props) {
                                       alignItems: 'center',
                                     }}>
                                     <ComplementText>
-                                      - {option.amount}x {option.name}
+                                      - {option.text}
                                     </ComplementText>
-                                    <ComplementValue>
-                                      {(
-                                        option.value * option.amount
-                                      ).toLocaleString('pt-BR', {
-                                        currency: 'BRL',
-                                        style: 'currency',
-                                      })}
-                                    </ComplementValue>
+                                    {(option.price && option.price > 0 && (
+                                      <ComplementValue>
+                                        {formatCurrency(
+                                          option.price * product.quantity,
+                                        )}
+                                      </ComplementValue>
+                                    )) ||
+                                      ''}
                                   </View>
                                 );
                               }
-                            } else if ('text' in option && 'price' in option) {
-                              return (
-                                <View
-                                  key={j}
-                                  style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                  }}>
-                                  <ComplementText>
-                                    - {option.text}
-                                  </ComplementText>
-                                  {option.price && option.price > 0 && (
-                                    <ComplementValue>
-                                      {(
-                                        option.price * product.quantity
-                                      ).toLocaleString('pt-BR', {
-                                        currency: 'BRL',
-                                        style: 'currency',
-                                      })}
-                                    </ComplementValue>
-                                  )}
-                                </View>
-                              );
-                            }
-                            return null;
-                          })}
-                        </View>
-                      ),
+                              return null;
+                            })}
+                          </View>
+                        );
+                      },
                     )}
                   </ComplementsContainer>
                 )}

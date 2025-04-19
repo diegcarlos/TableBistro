@@ -57,11 +57,17 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-interface PropsSettings {
+export interface PropsSettings {
   cnpj: string;
   name: string;
   logo: string;
   email: string;
+  printerNotification: string | null;
+  printerBill: string | null;
+  ipPrintNotification: string | null;
+  ipPrintBill: string | null;
+  portaPrintNotification: number | null;
+  portaPrintBill: number | null;
   phone: string;
   Banner: {
     id: string;

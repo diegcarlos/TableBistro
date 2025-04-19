@@ -2,6 +2,7 @@ export interface Category {
   id: string;
   status: boolean;
   nome: string;
+  ativo: boolean;
   imagem: string;
   cor: string;
   ordem: number;
@@ -36,6 +37,7 @@ export interface Product {
 export interface Adicionai {
   id: string;
   titulo: string;
+  ativo: boolean;
   qtdMinima: number;
   qtdMaxima: number;
   obrigatorio: boolean;
@@ -48,6 +50,7 @@ export interface Adicionai {
 export interface Opc {
   id: string;
   nome: string;
+  ativo: boolean;
   preco: number;
   codIntegra: string;
   createAt: string;

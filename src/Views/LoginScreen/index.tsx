@@ -163,8 +163,6 @@ export function LoginScreen({navigation}: {navigation: any}) {
     } catch (error: any) {
       if (error instanceof AxiosError) {
         const err: AxiosError = error;
-        console.log('é aqui');
-        console.log(err.toJSON());
       }
 
       setLoading(false);
@@ -190,8 +188,8 @@ export function LoginScreen({navigation}: {navigation: any}) {
         {visible && <Tooltip text={text} onClose={hideTooltip} />}
         <FormContainer>
           <LogoContainer>
-            {settings.logo ? (
-              <Logo source={{uri: settings?.logo}} />
+            {settings.data?.logo ? (
+              <Logo source={{uri: settings.data.logo}} />
             ) : (
               <LogoBistro width={100} height={100} />
             )}

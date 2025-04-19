@@ -1,5 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useEffect, useState} from 'react';
 import CallWaiter from '../../assets/svg/call-waiter.svg';
-import {useAuth} from '../../context/AuthContext';
+import {PropsSettings, useAuth} from '../../context/AuthContext';
 import {usePrinter} from '../../hooks/usePrinter';
 import {
   CancelButton,
@@ -23,19 +25,33 @@ export function ModalCallWaiter(props: Props) {
   const {mesa} = useAuth();
   const {isOpen = false, onClose} = props;
   const {printText} = usePrinter();
+  const [settings, setSettings] = useState({} as PropsSettings);
 
   const handlePressTalkWaiter = async () => {
     try {
       onClose?.(false);
-      const text = `<CB>CHAMANDO GARCOM DA MESA ${mesa.mesa}</CB>`;
-      await printText(text, {
-        host: '192.168.3.220',
-        port: 9100,
-      });
+      if (settings.ipPrintNotification && settings.portaPrintNotification) {
+        const text = `<CB>CHAMANDO GARCOM DA MESA ${mesa.mesa}</CB>`;
+        await printText(text, {
+          host: settings.ipPrintNotification,
+          port: settings.portaPrintNotification,
+        });
+      }
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    const getSettings = async () => {
+      const settings = await AsyncStorage.getItem('settings');
+      if (settings) {
+        setSettings(JSON.parse(settings));
+      }
+    };
+    getSettings();
+  }, []);
+
   return (
     <Modal
       closeButton={false}

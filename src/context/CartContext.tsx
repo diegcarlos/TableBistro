@@ -1,6 +1,7 @@
 import {AxiosResponse} from 'axios';
 import _ from 'lodash';
 import React, {createContext, useContext, useState} from 'react';
+import {InteractionManager} from 'react-native';
 import {usePrinter} from '../hooks/usePrinter';
 import api from '../http/api';
 import {PedidoTable} from '../types/pedidoTable';
@@ -135,124 +136,149 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({
 
   const onFinish = async () => {
     if (cartItems.length > 0 && dataProducts.length > 0) {
-      const isOrders = await getOrderTable();
+      try {
+        const isOrders = await getOrderTable();
 
-      if (!isOrders.id) {
-        await api.post('/pedidos', {
-          mesa: mesa.idMesa,
-          status: 'ABERTO',
-          produtos: cartItems.map(item => {
-            return {
-              produtoId: item.id,
-              externoId: item.externoId,
-              obs: item.observacao,
-              status: 'PREPARANDO',
-              quantidade: item.quantity,
-            };
-          }),
-        });
-      } else {
-        await api.put(`/pedidos/${isOrders.id}`, {
-          id: isOrders.id,
-          mesa: mesa.idMesa,
-          status: 'ABERTO',
-          produtos: cartItems.map(item => {
-            return {
-              produtoId: item.id,
-              externoId: item.externoId,
-              status: 'PREPARANDO',
-              obs: item.observacao,
-              quantidade: item.quantity,
-            };
-          }),
-        });
-      }
+        // Prepara os dados para impressão
+        const printData = cartItems.map(item => {
+          const category = dataProducts.find(category => {
+            return category.id === item.categoriaId;
+          });
 
-      setDataWallet(cartItems);
-      const print = cartItems.map(item => {
-        const category = dataProducts.find(category => {
-          return category.id === item.categoriaId;
-        });
+          // Processa os adicionais do item
+          const adicionais = item.selectedOptions
+            ? Object.values(item.selectedOptions).flatMap(options =>
+                options
+                  .map(option => {
+                    if ('amount' in option && 'value' in option) {
+                      return {
+                        name: `  + ${option.amount}x ${option.name}`,
+                        quantity: 1,
+                        obs: '',
+                        price: option.value * option.amount,
+                      };
+                    } else if ('text' in option) {
+                      return {
+                        name: `  + ${option.text}`,
+                        quantity: 1,
+                        obs: '',
+                        price: 0,
+                      };
+                    }
+                    return null;
+                  })
+                  .filter(
+                    (
+                      item,
+                    ): item is {
+                      name: string;
+                      quantity: number;
+                      obs: string;
+                      price: number;
+                    } => item !== null,
+                  ),
+              )
+            : [];
 
-        // Processar adicionais para impressão
-        const adicionais = item.selectedOptions
-          ? Object.values(item.selectedOptions).flatMap(options =>
-              options
-                .map(option => {
-                  if ('amount' in option && 'value' in option) {
-                    return {
-                      name: `  + ${option.amount}x ${option.name}`,
-                      quantity: 1,
-                      obs: '',
-                      price: option.value * option.amount,
-                    };
-                  } else if ('text' in option) {
-                    return {
-                      name: `  + ${option.text}`,
-                      quantity: 1,
-                      obs: '',
-                      price: 0,
-                    };
-                  }
-                  return null;
-                })
-                .filter(
-                  (
-                    item,
-                  ): item is {
-                    name: string;
-                    quantity: number;
-                    obs: string;
-                    price: number;
-                  } => item !== null,
-                ),
-            )
-          : [];
-
-        return {
-          name: item.name,
-          quantity: item.quantity,
-          obs: item.observacao,
-          price: item.price,
-          Impressora: category?.Impressora,
-          adicionais,
-        };
-      });
-
-      const groupPrints = _.groupBy(print, item => item.Impressora?.id);
-
-      Object.entries(groupPrints).forEach(([_, value]) => {
-        const printer = value[0].Impressora;
-
-        const items = value.flatMap(item => {
-          const baseItem = {
+          return {
             name: item.name,
             quantity: item.quantity,
-            obs: item.obs,
+            obs: item.observacao || '',
             price: item.price,
+            Impressora: category?.Impressora,
+            adicionais,
           };
-
-          // Incluir adicionais após o item principal
-          return [baseItem, ...item.adicionais];
         });
 
-        const total = items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        );
+        // Agrupa por impressora
+        const groupPrints = _.groupBy(printData, item => item.Impressora?.id);
 
-        if (printer) {
-          printBill(items, total, {
-            printer: {
-              host: printer.ip,
-              port: printer.porta,
-              name: printer.nome,
-            },
+        // Envia o pedido para a API
+        const pedidoData = {
+          mesa: mesa.idMesa,
+          status: 'ABERTO',
+          produtos: cartItems.map(item => {
+            return {
+              produtoId: item.id,
+              externoId: item.externoId,
+              obs: item.observacao,
+              status: 'PREPARANDO',
+              quantidade: item.quantity,
+              adicionais: item.selectedOptions
+                ? Object.values(item.selectedOptions).flatMap(options =>
+                    options.map(option => ({
+                      id: option.id || null,
+                      codIntegra:
+                        'codIntegra' in option ? option.codIntegra : null,
+                      quantidade: 'amount' in option ? option.amount : 1,
+                      price: option.value || option.price || 0,
+                    })),
+                  )
+                : [],
+            };
+          }),
+        };
+
+        if (!isOrders || !isOrders.id) {
+          await api.post('/pedidos', pedidoData);
+        } else {
+          await api.put(`/pedidos/${isOrders.id}`, {
+            id: isOrders.id,
+            ...pedidoData,
           });
         }
-      });
-      setIsCartOpen(false);
-      clearCart();
+
+        // Limpa o carrinho e fecha o drawer
+        setDataWallet(cartItems);
+        setIsCartOpen(false);
+        clearCart();
+
+        // Inicia a impressão após a interação com a UI
+        InteractionManager.runAfterInteractions(async () => {
+          try {
+            for (const [_, value] of Object.entries(groupPrints)) {
+              const printer = value[0].Impressora;
+              if (!printer) continue;
+
+              const items = value.flatMap(item => {
+                const baseItem = {
+                  name: item.name,
+                  quantity: item.quantity,
+                  obs: item.obs,
+                  price: item.price,
+                };
+
+                return [baseItem, ...item.adicionais];
+              });
+
+              const total = items.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0,
+              );
+
+              try {
+                await printBill(items, total, {
+                  printer: {
+                    host: printer.ip,
+                    port: printer.porta,
+                    name: printer.nome,
+                  },
+                });
+              } catch (error) {
+                console.error(
+                  `Erro ao imprimir na impressora ${printer.nome}:`,
+                  error,
+                );
+              }
+            }
+          } catch (error) {
+            console.error('Erro no processo de impressão:', error);
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao finalizar pedido:', error);
+        throw error;
+      }
     }
   };
 
