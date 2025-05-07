@@ -191,7 +191,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     if (user) {
       // Conecta ao mesmo endereço da API
       const socketInstance = io(
-        api.defaults.baseURL || 'http://192.168.3.3:4444',
+        api.defaults.baseURL || 'https://api.bistro.app.br/',
       );
 
       socketInstance.on('connect', () => {

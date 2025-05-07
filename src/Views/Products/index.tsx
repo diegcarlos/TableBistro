@@ -65,7 +65,7 @@ const Products = ({navigation}: {navigation: any}) => {
   // Implementação do socket para atualizar status dos produtos
   useEffect(() => {
     if (user?.restaurantCnpj) {
-      const socket = io(api.defaults.baseURL || 'http://192.168.3.3:4444');
+      const socket = io(api.defaults.baseURL || 'https://api.bistro.app.br/');
 
       socket.on('connect', () => {
         socket.emit('join:restaurant', user.restaurantCnpj);

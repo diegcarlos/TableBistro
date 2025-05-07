@@ -29,9 +29,7 @@ interface PrinterHook {
 
 export const usePrinter = (): PrinterHook => {
   const {mesa, user} = useAuth();
-  const [listPrinters, setListPrinters] = useState<PrinterConfig[]>([
-    {host: '192.168.3.220', port: 9100, name: 'Default Printer'},
-  ]);
+  const [listPrinters, setListPrinters] = useState<PrinterConfig[]>([]);
   const [currentPrinter, setCurrentPrinter] = useState<INetPrinter | null>(
     null,
   );
