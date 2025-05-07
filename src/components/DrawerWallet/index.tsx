@@ -89,6 +89,8 @@ export function DrawerWallet(props: Props) {
         port: settings.portaPrintBill,
       });
     }
+
+    onClose?.(false);
   };
 
   const calculateTotal = () => {

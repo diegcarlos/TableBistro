@@ -9,7 +9,6 @@ import {
 import CheckSteps from '../../assets/svg/checkSteps.svg';
 import {ButtonRed} from '../../components/ButtonRed';
 import {PriceProduct} from '../../components/CardProducts/styles';
-import {useAuth} from '../../context/AuthContext';
 import {CartItems} from '../../context/CartContext';
 import {Category, Product as TypesProduct} from '../../types/products';
 import AddRemove from '../AddRemove';
@@ -22,6 +21,7 @@ import {
   ComplementFooter,
   Container,
   DescriptionProduct,
+  DescriptionView,
   ImageProduct,
   ObservationInput,
   Pen,
@@ -48,15 +48,13 @@ interface Props {
 }
 
 export function Product(props: Props) {
-  const {product, onProductFinish, indexProduct, category, onRefresh} = props;
-  const {user} = useAuth();
+  const {product, onProductFinish, indexProduct, category} = props;
   const [qtd, setQtd] = useState(1);
   const [observacao, setObservacao] = useState('');
   const [stepSelect, setStepSelect] = useState(0);
   const {showTooltip, visible, hideTooltip, text} = useTooltip();
   const stepsScrollRef = useRef<ScrollView>(null);
   const stepRefs = useRef<{[key: string]: View}>({});
-
   // Interfaces para as opções selecionadas
   interface RadioOption {
     id: string;
@@ -196,7 +194,7 @@ export function Product(props: Props) {
         quantity: qtd,
         total: product.preco * qtd,
         observacao: observacao,
-        selectedOptions: selectedOptions,
+        selectedOptions: {...selectedOptions}, // Ensure immutability
       };
 
       onProductFinish?.(cartItem, indexProduct as number);
@@ -263,7 +261,7 @@ export function Product(props: Props) {
 
     setSelectedOptions(prev => ({
       ...prev,
-      [adicionalId]: newOptions,
+      [adicionalId]: [...newOptions], // Ensure immutability
     }));
     setValidationError(null);
   };
@@ -280,7 +278,8 @@ export function Product(props: Props) {
       category.adicionais.length > 0 &&
       category.ativo
     ) {
-      const dynamicSteps: DataStep[] = category.adicionais
+      const dados = [...category.adicionais];
+      const dynamicSteps: DataStep[] = dados
         .filter(
           adicional => adicional.ativo && adicional.opcoes.some(op => op.ativo),
         )
@@ -311,7 +310,6 @@ export function Product(props: Props) {
           id: 'step-obs',
         },
       ];
-
       setDataSteps(allSteps);
     } else {
       // Caso não tenha adicionais ativos, manter apenas os steps fixos
@@ -351,9 +349,19 @@ export function Product(props: Props) {
       <Container>
         {visible && <Tooltip text={text} onClose={hideTooltip} />}
         <ViewProduct>
-          <ImageProduct src={product?.imagem} />
+          <ImageProduct width={600} height={400} src={product?.imagem} />
           <TitleProduct>{product?.nome}</TitleProduct>
-          <DescriptionProduct>{product?.descricao}</DescriptionProduct>
+          <DescriptionView style={{maxHeight: 75, width: '100%'}}>
+            <ScrollView
+              style={{
+                maxHeight: 75,
+              }}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              showsVerticalScrollIndicator>
+              <DescriptionProduct>{product?.descricao}</DescriptionProduct>
+            </ScrollView>
+          </DescriptionView>
           <StepsContainer>
             <Steps
               ref={stepsScrollRef}
@@ -362,7 +370,9 @@ export function Product(props: Props) {
               scrollEventThrottle={16}
               alwaysBounceVertical={true}
               nestedScrollEnabled={true}
-              overScrollMode="never">
+              overScrollMode="never"
+              contentContainerStyle={{paddingBottom: 20}}
+              style={{flex: 1}}>
               {dataSteps.map((dataStep, index) => (
                 <StepsOptions
                   ref={(ref: View) => {

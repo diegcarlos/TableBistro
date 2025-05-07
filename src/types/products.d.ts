@@ -31,6 +31,7 @@ export interface Product {
   delete: boolean;
   createAt: string;
   updateAt: string;
+  categoria: {id: string};
   ativo: boolean;
 }
 

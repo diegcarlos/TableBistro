@@ -6,11 +6,17 @@ interface GroupItemsProps {
   children?: React.ReactNode;
   title: string;
   onLayout?: (event: LayoutChangeEvent) => void;
+  active?: boolean;
 }
 
-export function GroupItens({children, title, onLayout}: GroupItemsProps) {
+export function GroupItens({
+  children,
+  title,
+  onLayout,
+  active,
+}: GroupItemsProps) {
   return (
-    <Container onLayout={onLayout}>
+    <Container active={active} onLayout={onLayout}>
       <ContainerTitle>
         <Title>{title}</Title>
       </ContainerTitle>

@@ -34,6 +34,7 @@ interface PayloadLoginProps {
 interface AuthContextData {
   user: PropsUser | null;
   mesa: PropsMesa;
+  dataSettings: PropsSettings | null;
   settings: UseQueryResult<{
     data: PropsSettings;
   }>;
@@ -62,6 +63,7 @@ export interface PropsSettings {
   name: string;
   logo: string;
   email: string;
+  adminPassword: string;
   printerNotification: string | null;
   printerBill: string | null;
   ipPrintNotification: string | null;
@@ -78,6 +80,8 @@ export interface PropsSettings {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const [user, setUser] = useState<PropsUser | null>(null);
+  const [dataSettings, setDataSettings] = useState<PropsSettings | null>(null);
+
   const [mesa, setMesa] = useState<{mesa: number; idMesa: string}>(
     {} as PropsMesa,
   );
@@ -127,22 +131,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         setSocket(null);
       }
 
-      // Limpa os estados
-      setUser(null);
-      setMesa({} as PropsMesa);
-
-      // Remove todos os dados do AsyncStorage
+      // Remove todos os dados do AsyncStorage primeiro
       await AsyncStorage.multiRemove([
         'user',
         'access-token',
+        'app-token',
         'mesa',
         'settings',
-        // Adicione aqui outros itens que precisam ser removidos
+        'form-login-save',
+        'save-pass',
       ]);
+
+      // Depois limpa os estados
+      setUser(null);
+      setMesa({} as PropsMesa);
+
+      // Espera um momento para garantir que todas as operações foram completadas
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       console.log('Logout realizado com sucesso');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      throw error; // Propaga o erro para ser tratado no componente
     }
   };
 
@@ -169,6 +179,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   useEffect(() => {
     const fetch = async () => {
       const user = await AsyncStorage.getItem('user');
+      const settings = await AsyncStorage.getItem('settings');
+      if (settings) {
+        setDataSettings(JSON.parse(settings));
+      }
 
       const storageMesa = await AsyncStorage.getItem('mesa');
       if (storageMesa) {
@@ -239,6 +253,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         user,
         signIn,
         signOut,
+        dataSettings,
         mesa,
         setMesaStorage,
         settings,

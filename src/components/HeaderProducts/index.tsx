@@ -22,11 +22,23 @@ const itens = [
   {id: 4, name: 'Meu Carrinho', Icon: MyCartIcon},
 ];
 
-import {useEffect, useRef} from 'react';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useEffect, useRef, useState} from 'react';
 import {Animated, Easing} from 'react-native';
 import {useAuth} from '../../context/AuthContext';
 import {useCart} from '../../context/CartContext';
 import BarLoader from '../BarLoader';
+
+type RootStackParamList = {
+  Home: undefined;
+  Login: undefined;
+  InsertTable: undefined;
+  Products: undefined;
+  Admin: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface Props {
   onPressWaiter?: () => void;
@@ -39,6 +51,8 @@ function HeaderProducts(props: Props) {
   const {onPressWaiter, onPressWallet, onPressShopCar, loading = false} = props;
   const {mesa} = useAuth();
   const {cartItems} = useCart();
+  const navigation = useNavigation<NavigationProp>();
+  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
@@ -91,6 +105,24 @@ function HeaderProducts(props: Props) {
     outputRange: ['-30deg', '0deg', '30deg'],
   });
 
+  const handleLongPress = () => {
+    navigation.replace('Admin');
+  };
+
+  const handlePressIn = () => {
+    const timer = setTimeout(() => {
+      handleLongPress();
+    }, 3000); // 3 segundos
+    setPressTimer(timer);
+  };
+
+  const handlePressOut = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  };
+
   if (loading) {
     return (
       <Container>
@@ -101,10 +133,13 @@ function HeaderProducts(props: Props) {
 
   return (
     <Container>
-      <ViewMesa>
+      <ViewMesa
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}>
         <TextMesa>Mesa: </TextMesa>
         <TextNumMesa>
-          <TextMesa>{mesa?.mesa || ''}</TextMesa>
+          <TextMesa>{mesa?.mesa || '0'}</TextMesa>
         </TextNumMesa>
       </ViewMesa>
       <MenuHeader>

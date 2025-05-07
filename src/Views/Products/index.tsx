@@ -39,6 +39,10 @@ const Products = ({navigation}: {navigation: any}) => {
   const [isModalWaiter, setIsModalWaiter] = useState(false);
   const [isDrawerWallet, setIsDrawerWallet] = useState(false);
   const [isDrawerShopCar, setIsDrawerShopCar] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [pendingScrollIndex, setPendingScrollIndex] = useState<number | null>(
+    null,
+  );
 
   // Verificar autenticação e mesa selecionada
   useEffect(() => {
@@ -92,17 +96,80 @@ const Products = ({navigation}: {navigation: any}) => {
     [],
   );
 
-  const scrollToGroup = (index: number) => {
-    const group = products.data?.data?.[index];
-    if (group && scrollViewRef.current && groupLayouts.current[group.id]) {
-      const layout = groupLayouts.current[group?.id];
+  // Array de grupos visíveis (apenas categorias ativas e com produtos)
+  const visibleGroups =
+    products.data?.data?.filter(g => g.ativo && g.produtos.length > 0) || [];
 
-      scrollViewRef.current.scrollTo({
-        y: Math.max(0, layout.y),
+  const scrollToGroup = useCallback((visibleIndex: number) => {
+    setActiveGroupIndex(visibleIndex);
+    setPendingScrollIndex(visibleIndex);
+  }, []);
+
+  useEffect(() => {
+    if (
+      pendingScrollIndex !== null &&
+      visibleGroups[pendingScrollIndex] &&
+      groupLayouts.current[visibleGroups[pendingScrollIndex].id]
+    ) {
+      const group = visibleGroups[pendingScrollIndex];
+      const layout = groupLayouts.current[group.id];
+      const headerHeight = 96;
+      const offset = headerHeight;
+      const targetPosition = Math.max(0, layout.y - offset);
+
+      setIsScrolling(true);
+      scrollViewRef.current?.scrollTo({
+        y: targetPosition,
         animated: true,
       });
+
+      setTimeout(() => {
+        setIsScrolling(false);
+      }, 300);
+
+      setPendingScrollIndex(null);
     }
-  };
+  }, [pendingScrollIndex, visibleGroups]);
+
+  const onScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isScrolling) return;
+
+      const scrollY = event.nativeEvent.contentOffset.y;
+      const headerHeight = 96;
+      const offset = headerHeight;
+      const adjustedScrollY = scrollY + offset;
+
+      if (!visibleGroups.length) return;
+
+      let currentIndex = 0;
+      let minDistance = Number.MAX_VALUE;
+
+      visibleGroups.forEach((group, index) => {
+        const layout = groupLayouts.current[group.id];
+        if (!layout) return;
+
+        // Calcula a distância considerando a posição do topo do grupo
+        const distance = Math.abs(layout.y - adjustedScrollY);
+        if (distance < minDistance) {
+          minDistance = distance;
+          currentIndex = index;
+        }
+      });
+
+      if (currentIndex !== activeGroupIndex) {
+        setActiveGroupIndex(currentIndex);
+      }
+    },
+    [visibleGroups, isScrolling, activeGroupIndex],
+  );
+
+  // Efeito para atualizar os layouts quando os dados mudarem
+  useEffect(() => {
+    if (products.data?.data) {
+      groupLayouts.current = {};
+    }
+  }, [products.data?.data]);
 
   const handleAddCard = (data: CartItems, index: number | null) => {
     if (index !== null) {
@@ -111,43 +178,7 @@ const Products = ({navigation}: {navigation: any}) => {
     setIsModalProduct(false);
   };
 
-  const onScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const scrollY = event.nativeEvent.contentOffset.y;
-
-      const visibleGroups = products.data?.data?.filter(
-        g => g.produtos.length > 0,
-      );
-      let closestGroup = 0;
-      let minDistance = Number.MAX_VALUE;
-
-      visibleGroups?.forEach((group, index) => {
-        const layout = groupLayouts.current[group.id];
-        if (layout) {
-          const distance = Math.abs(layout.y - scrollY);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestGroup = index;
-          }
-        }
-      });
-
-      if (
-        visibleGroups &&
-        visibleGroups.length > 0 &&
-        closestGroup < visibleGroups.length
-      ) {
-        const activeGroupId = visibleGroups[closestGroup].id;
-        const activeIndex =
-          products.data?.data?.findIndex(g => g.id === activeGroupId) ?? 0;
-        setActiveGroupIndex(activeIndex);
-      }
-    },
-    [products.data?.data],
-  );
-
   useEffect(() => {
-    groupLayouts.current = {};
     setDataProducts(products.data?.data || []);
   }, [products.data]);
 
@@ -157,11 +188,7 @@ const Products = ({navigation}: {navigation: any}) => {
         onSelectGroup={scrollToGroup}
         activeIndex={activeGroupIndex}
         loading={products.isLoading}
-        itens={
-          products.data?.data?.map(pro => {
-            return {name: pro.nome};
-          }) || []
-        }
+        itens={visibleGroups.map(pro => ({name: pro.nome}))}
       />
       <ContentFluid>
         <HeaderProducts
@@ -176,7 +203,7 @@ const Products = ({navigation}: {navigation: any}) => {
             onScroll={onScroll}
             scrollEventThrottle={16}
             style={{flex: 1}}>
-            {products.data?.data?.map((group, index) => {
+            {visibleGroups.map((group, index) => {
               // Filtra os produtos ativos
               const produtosAtivos = group.produtos.filter(produto => {
                 // Se o produto estiver ativo, exibe
@@ -201,6 +228,7 @@ const Products = ({navigation}: {navigation: any}) => {
               return (
                 <GroupItens
                   key={group.id}
+                  active={group.ativo}
                   title={group.nome}
                   onLayout={event =>
                     onGroupLayout(group.id, event.nativeEvent.layout)
@@ -243,7 +271,9 @@ const Products = ({navigation}: {navigation: any}) => {
         onClose={() => setIsModalProduct(false)}>
         <Product
           product={selectProduct}
-          category={products.data?.data?.[activeGroupIndex]}
+          category={products.data?.data?.find(
+            g => g.id === selectProduct?.categoria?.id,
+          )}
           onProductFinish={p => handleAddCard(p, indexProduct)}
           indexProduct={indexProduct}
         />

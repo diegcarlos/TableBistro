@@ -1,3 +1,4 @@
+import FastImage from 'react-native-fast-image';
 import styled from 'styled-components/native';
 
 export const Container = styled.View`
@@ -9,7 +10,7 @@ export const Container = styled.View`
   flex-direction: row;
 `;
 
-export const ImageProduct = styled.ImageBackground`
+export const ImageProduct = styled(FastImage)`
   width: 264px;
   height: 100%;
   background-color: #2e2e2e;

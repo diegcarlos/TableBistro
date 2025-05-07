@@ -6,12 +6,22 @@ import SystemNavigationBar from 'react-native-system-navigation-bar';
 import kioskmode from 'rtn-kioskmode/js/NativeKioskmode';
 import {AuthProvider} from '../context/AuthContext';
 import {CartProvider} from '../context/CartContext';
+import AdminScreen from './Admin/indext';
 import {LoginScreen} from './LoginScreen';
 import {NumericKeyboard} from './NumericKeyboard';
 import Products from './Products';
 import {RestScreen} from './RestScreen';
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Home: undefined;
+  Login: undefined;
+  InsertTable: undefined;
+  Products: undefined;
+  Admin: undefined;
+  Splash: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function RootStack() {
   return (
@@ -26,6 +36,7 @@ function RootStack() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="InsertTable" component={NumericKeyboard} />
           <Stack.Screen name="Products" component={Products} />
+          <Stack.Screen name="Admin" component={AdminScreen} />
         </Stack.Navigator>
       </CartProvider>
     </AuthProvider>

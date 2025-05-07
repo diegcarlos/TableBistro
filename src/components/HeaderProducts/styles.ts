@@ -35,12 +35,14 @@ export const MenuTouchable = styled.TouchableOpacity`
 `;
 
 export const MenuItemBody = styled.View`
-  justify-content: center;
+  display: flex;
   flex-direction: row;
+  width: 100%;
+  justify-content: center;
   align-items: center;
   gap: 10px;
   height: 60px;
-  width: 100%;
+  white-space: nowrap;
 `;
 
 export const MenuItemText = styled.Text`
@@ -48,12 +50,11 @@ export const MenuItemText = styled.Text`
   font-family: 'Montserrat-Medium';
   font-size: 16px;
   width: 79px;
-  flex-wrap: wrap;
   flex-shrink: 1;
   text-align: left;
 `;
 
-export const ViewMesa = styled.View`
+export const ViewMesa = styled.TouchableOpacity`
   position: absolute;
   display: flex;
   flex-direction: row;

@@ -14,7 +14,7 @@ export const ViewProduct = styled.View`
   width: 45%;
   background-color: #161616;
   padding: 24px;
-  overflow: hidden;
+  flex: 1;
 `;
 
 export const ImageProduct = styled.Image`
@@ -29,14 +29,17 @@ export const TitleProduct = styled.Text`
   font-family: 'Montserrat-Medium';
 `;
 
-export const DescriptionProduct = styled.Text`
+export const DescriptionProduct = styled(TextMedium)`
   font-size: 16px;
   color: #e6e6e6;
-  font-family: 'Montserrat-Medium';
 `;
 
 export const Steps = styled.ScrollView`
   flex: 1;
+  height: 100%;
+  contentcontainerstyle: {
+    paddingbottom: 20;
+  }
 `;
 
 export const StepsOptions = styled.TouchableOpacity<{active: boolean}>`
@@ -163,8 +166,16 @@ export const ObservationInput = styled.TextInput`
   text-align-vertical: top;
 `;
 
+export const DescriptionView = styled.View`
+  flex: 1;
+  width: 100%;
+  position: relative;
+  max-height: 300px;
+`;
+
 export const StepsContainer = styled.View`
   flex: 1;
   width: 100%;
   position: relative;
+  max-height: 300px;
 `;

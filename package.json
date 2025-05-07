@@ -1,6 +1,6 @@
 {
   "name": "TableBistro",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -26,8 +26,10 @@
     "react-hook-form": "^7.54.2",
     "react-native": "0.76.6",
     "react-native-esc-pos-printer": "^4.4.1",
+    "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "^2.22.0",
     "react-native-keep-awake": "^4.0.0",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-ping": "^1.2.8",
     "react-native-reanimated": "^3.16.7",
     "react-native-reanimated-carousel": "^3.5.1",

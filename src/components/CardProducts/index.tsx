@@ -1,4 +1,5 @@
 import React from 'react';
+import FastImage from 'react-native-fast-image';
 import BarLoader from '../BarLoader';
 import {ButtonRed} from '../ButtonRed';
 import {
@@ -40,10 +41,19 @@ const CardProducts = ({
         <BarLoader size={50} color="#E11D48" style={{flex: 1}} />
       ) : (
         <>
-          <ImageProduct resizeMode="cover" source={{uri: image || '#'}} />
+          <ImageProduct
+            resizeMode={FastImage.resizeMode.cover}
+            source={{
+              uri: image,
+              priority: FastImage.priority.high,
+              cache: FastImage.cacheControl.immutable,
+            }}
+          />
           <Wrapper>
             <TitleProduct>{title}</TitleProduct>
-            <DescriptionProduct>{description}</DescriptionProduct>
+            <DescriptionProduct numberOfLines={2} ellipsizeMode="tail">
+              {description}
+            </DescriptionProduct>
             <WrapperPrice>
               <WrapperPrices>
                 <PriceProduct desconto={discount > 0}>
